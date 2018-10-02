@@ -1,30 +1,28 @@
-import org.specs2.mutable._
-import org.specs2.runner._
-import org.junit.runner._
+import org.junit.Assert._
+import org.junit.Test
+import play.Application
+import play.api.http.HttpVerbs
+import play.test.Helpers
+import play.test.Helpers._
 
-import play.api.test._
-import play.api.test.Helpers._
 
-/**
- * Add your spec here.
- * You can mock out a whole application including requests, plugins etc.
- * For more information, consult the wiki.
- */
-@RunWith(classOf[JUnitRunner])
-class ApplicationSpec extends Specification {
+class ApplicationTests{
 
-  "Application" should {
+  val app: Application = fakeApplication()
 
-    "send 404 on a bad request" in new WithApplication{
-      route(FakeRequest(GET, "/boum")) must beNone
-    }
+  //val app: Application = fakeApplication(inMemoryDatabase("test"))
 
-    "render the index page" in new WithApplication{
-      val home = route(FakeRequest(GET, "/")).get
+  @Test
+  def testBadRoute(): Unit = {
+    val request = Helpers.fakeRequest.method(HttpVerbs.GET).uri("/xx/Kiwi")
+    val result = route(app, request)
+    assertEquals(404, result.status)
+  }
 
-      status(home) must equalTo(OK)
-      contentType(home) must beSome.which(_ == "text/html")
-      contentAsString(home) must contain ("Your new application is ready.")
-    }
+  @Test
+  def renderHomePage(): Unit = {
+    val request = Helpers.fakeRequest.method(HttpVerbs.GET).uri("/")
+    val result = route(app, request)
+    assertEquals(200, result.status)
   }
 }
