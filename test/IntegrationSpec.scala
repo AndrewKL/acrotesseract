@@ -1,5 +1,5 @@
 import org.junit.Assert._
-import org.junit.Test
+import org.junit.{Ignore, Test}
 import play.api.test._
 
 /**
@@ -9,9 +9,7 @@ import play.api.test._
 class IntegrationSpec  {
   @Test
   def canStartLocalDevServer(): Unit = new WithBrowser {
-
-    browser.goTo("http://localhost:" + port)
-
+    browser.goTo("http://localhost:$port")
     assertNotNull(browser.pageSource)
   }
 }

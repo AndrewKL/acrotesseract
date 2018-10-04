@@ -15,6 +15,7 @@ libraryDependencies ++= Seq(
   jdbc , 
   cache , 
   ws ,
+  guice,
   "com.amazonaws" % "aws-java-sdk" % "1.11.421",
   "mysql" % "mysql-connector-java" % "8.0.12",
   "com.typesafe.play" %% "anorm" % "2.5.3",
@@ -25,6 +26,14 @@ libraryDependencies ++= Seq(
   "com.novocode" % "junit-interface" % "0.11" % Test
     exclude("junit", "junit-dep")
 )
+
+dependencyOverrides += "io.netty" % "netty-codec-http" % "4.0.41.Final"
+dependencyOverrides += "io.netty" % "netty-handler" % "4.0.41.Final"
+dependencyOverrides += "io.netty" % "netty-codec" % "4.0.41.Final"
+dependencyOverrides += "io.netty" % "netty-transport" % "4.0.41.Final"
+dependencyOverrides += "io.netty" % "netty-buffer" % "4.0.41.Final"
+dependencyOverrides += "io.netty" % "netty-common" % "4.0.41.Final"
+dependencyOverrides += "io.netty" % "netty-transport-native-epoll" % "4.0.41.Final"
 
 unmanagedResourceDirectories in Test <+=  baseDirectory ( _ /"target/web/public/test" )
 
