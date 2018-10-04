@@ -1,11 +1,10 @@
+version: 0.1
 
 phases:
   build:
     commands:
-     - chmod +x $CODEBUILD_SRC_DIR/aws-package.sh
-     - ls -la $CODEBUILD_SRC_DIR/aws-package.sh
-     - cat $CODEBUILD_SRC_DIR/aws-package.sh
-     - $CODEBUILD_SRC_DIR/aws-package.sh
+    - chmod +x $CODEBUILD_SRC_DIR/aws-package.sh
+    - $CODEBUILD_SRC_DIR/aws-package.sh
 artifacts:
   files:
-    - target/acrotesseract-docker.zip
+  - target/acrotesseract-docker.zip
