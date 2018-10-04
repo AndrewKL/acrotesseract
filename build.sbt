@@ -14,7 +14,12 @@ scalaVersion := "2.11.11"
 libraryDependencies ++= Seq( 
   jdbc , 
   cache , 
-  ws , 
+  ws ,
+  "com.amazonaws" % "aws-java-sdk" % "1.11.421",
+  "mysql" % "mysql-connector-java" % "8.0.12",
+  "com.typesafe.play" %% "anorm" % "2.5.3",
+
+  "org.flywaydb" % "flyway-core" % "5.2.0" % Test,
   specs2 % Test,
   "junit" % "junit" % "4.11" % Test,
   "com.novocode" % "junit-interface" % "0.11" % Test
