@@ -1,0 +1,48 @@
+#env:
+#variables:
+# key: "value"
+# key: "value"
+#parameter-store:
+# key: "value"
+# key: "value"
+
+phases:
+  #install:
+  #commands:
+  # - command
+  # - command
+  #finally:
+  # - command
+  # - command
+  #pre_build:
+  #commands:
+  # - command
+  # - command
+  #finally:
+  # - command
+  # - command
+  build:
+    commands:
+    - aws-package.sh
+    #finally:
+    # - command
+    # - command
+    #post_build:
+    #commands:
+    # - command
+    # - command
+    #finally:
+    # - command
+    # - command
+    artifacts:
+    files:
+     - target/acrotesseract-docker.zip
+    # - location
+    # - name
+    #discard-paths: yes
+    #base-directory: location
+    #cache:
+    #paths:
+    # - path
+    # - path
+
