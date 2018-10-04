@@ -23,7 +23,9 @@ phases:
   # - command
   build:
     commands:
-    - ./aws-package.sh
+    - ls -la $CODEBUILD_SRC_DIR/aws-package.sh
+    - cat $CODEBUILD_SRC_DIR/aws-package.sh
+    - $CODEBUILD_SRC_DIR/aws-package.sh
     #finally:
     # - command
     # - command
