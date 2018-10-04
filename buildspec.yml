@@ -23,7 +23,7 @@ phases:
   # - command
   build:
     commands:
-    - aws-package.sh
+    - ./aws-package.sh
     #finally:
     # - command
     # - command
