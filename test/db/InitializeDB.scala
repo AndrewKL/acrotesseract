@@ -24,11 +24,8 @@ class InitializeDB {
       .load
 
     // Start the migration
-
     flyway.repair()
-
     flyway.migrate()
-
   }
 
 }

@@ -6,7 +6,7 @@ import javax.inject.Inject
 import play.api.mvc._
 import repo.{AcroDb, PosesAndTransistionsRepo}
 
-class Admin @Inject() (repo:PosesAndTransistionsRepo) extends Controller  {
+class Admin @Inject() (repo:PosesAndTransistionsRepo) extends InjectedController  {
   def index = Action {
     Ok(views.html.admin(repo.countPoses(),repo.countTransitions()))
   }
