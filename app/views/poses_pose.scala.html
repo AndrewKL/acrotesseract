@@ -1,8 +1,33 @@
 @import repo.Pose
-@(pose: Pose)
+@import repo.Transition
+@(pose: Pose,transFrom:List[Transition],transTo:List[Transition])
 
 @main("List Poses") {
 
     @pose
+    <h2>Transitions From This Pose</h2>
+    <table>
+        <tr>
+            <th>Name</th>
+
+        </tr>
+        @for(transition <- transFrom){
+            <tr>
+                <td><a href="@routes.Transitions.get(transition.transition_id.get)">@transition.name</a></td>
+            </tr>
+        }
+    </table>
+    <h2>Transitions To This Pose</h2>
+    <table>
+        <tr>
+            <th>Name</th>
+
+        </tr>
+        @for(transition <- transTo){
+            <tr>
+                <td><a href="@routes.Transitions.get(transition.transition_id.get)">@transition.name</a></td>
+            </tr>
+        }
+    </table>
 
 }

@@ -3,6 +3,17 @@
 
 @main("List Poses") {
     List Poses
-    @poses
+    <table>
+        <tr>
+            <th>Name</th>
+
+        </tr>
+        @for(pose <- poses){
+            <tr>
+                <td><a href="@routes.Poses.get(pose.pose_id.get)">@pose.name</a></td>
+            </tr>
+        }
+    </table>
+
 
 }

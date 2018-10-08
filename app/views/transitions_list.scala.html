@@ -2,7 +2,17 @@
 @(transitions: List[Transition])
 
 @main("List Transitions") {
-    List Transitions
-    @transitions
+    <h2>List Transitions</h2>
+    <table>
+        <tr>
+            <th>Name</th>
+
+        </tr>
+        @for(transition <- transitions){
+        <tr>
+            <td><a href="@routes.Transitions.get(transition.transition_id.get)">@transition.name</a></td>
+        </tr>
+        }
+    </table>
 
 }

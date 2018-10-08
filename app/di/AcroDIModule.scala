@@ -1,11 +1,11 @@
 package di
 
 import com.google.inject.AbstractModule
-import repo.{AcroDb, PosesAndTransistionsRepo}
+import repo.{AcroDb, PosesAndTransitionsRepo, PosesAndTransitionsTrait, TestRepo}
 
 class AcroDIModule extends AbstractModule {
   override def configure(): Unit = {
-    bind(classOf[AcroDb]).toInstance(AcroDb.devDb)
-    bind(classOf[PosesAndTransistionsRepo])
+
+    bind(classOf[PosesAndTransitionsTrait]).toInstance(new TestRepo)
   }
 }

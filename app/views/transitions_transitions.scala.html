@@ -1,0 +1,11 @@
+@import repo.Transition
+@import repo.Pose
+@(transition: Transition,fromPose:Pose,toPose:Pose)
+
+@main("Transition") {
+    Transition
+    <div>Name: @transition.name</div>
+
+    <div>From: <a href="@routes.Poses.get(fromPose.pose_id.get)">@fromPose.name</a></div>
+    <div>To: <a href="@routes.Poses.get(toPose.pose_id.get)">@toPose.name</a></div>
+}
