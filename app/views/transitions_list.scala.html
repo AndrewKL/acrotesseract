@@ -3,13 +3,13 @@
 
 @main_with_navbar("List Transitions") {
     <h2>List Transitions</h2>
-    <table>
-        <tr>
+    <table class="table">
+        <thead>
             <th>Name</th>
 
-        </tr>
+        </thead>
         @for(transition <- transitions){
-        <tr>
+        <tr x-transition-id="@transition.transition_id.get">
             <td><a href="@routes.Transitions.get(transition.transition_id.get)">@transition.name</a></td>
         </tr>
         }
