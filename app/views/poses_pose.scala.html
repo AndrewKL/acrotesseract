@@ -3,31 +3,36 @@
 @(pose: Pose,transFrom:List[Transition],transTo:List[Transition])
 
 @main_with_navbar("List Poses") {
-
-    @pose
-    <h2>Transitions From This Pose</h2>
-    <table class="table">
-        <tr>
-            <th>Name</th>
-
-        </tr>
-        @for(transition <- transFrom){
-            <tr>
-                <td><a href="@routes.Transitions.get(transition.transition_id.get)">@transition.name</a></td>
-            </tr>
+    <div class="pose">
+        <h2>@pose.name</h2>
+        <img src="@pose.image_url" class="primary-pose-img">
+        @if(pose.description_md != null){
+            <p>@pose.description_md</p>
         }
-    </table>
-    <h2>Transitions To This Pose</h2>
-    <table class="table">
-        <tr>
-            <th>Name</th>
 
-        </tr>
-        @for(transition <- transTo){
+        <h3>Transitions From This Pose</h3>
+        <table class="table">
             <tr>
-                <td><a href="@routes.Transitions.get(transition.transition_id.get)">@transition.name</a></td>
-            </tr>
-        }
-    </table>
+                <th>Name</th>
 
+            </tr>
+            @for(transition <- transFrom){
+                <tr>
+                    <td><a href="@routes.Transitions.get(transition.transition_id.get)">@transition.name</a></td>
+                </tr>
+            }
+        </table>
+        <h2>Transitions To This Pose</h2>
+        <table class="table">
+            <tr>
+                <th>Name</th>
+
+            </tr>
+            @for(transition <- transTo){
+                <tr>
+                    <td><a href="@routes.Transitions.get(transition.transition_id.get)">@transition.name</a></td>
+                </tr>
+            }
+        </table>
+    </div>
 }
