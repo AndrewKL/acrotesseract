@@ -7,9 +7,10 @@ import play.api.test._
  * An integration test will fire up a whole play application in a real (or headless) browser
  */
 class IntegrationSpec  {
+  val port = 9000
   @Test
   def canStartLocalDevServer(): Unit = new WithBrowser {
-    browser.goTo("http://localhost:$port")
+    browser.goTo(s"http://localhost:$port")
     assertNotNull(browser.pageSource)
   }
 }
