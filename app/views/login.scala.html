@@ -1,0 +1,13 @@
+@(error: Option[String] = None)
+
+@main_with_navbar("Welcome to Acro Tesseract") {
+        <h1>Login Page</h1>
+        <p>Click the button below to login.</p>
+        @error.map { message =>
+            <p>The error was: @message</p>
+        }
+        <form action="@routes.Login.loginAction()" method="get">
+            <input value="Log In" type="submit">
+        </form>
+        <a href="@routes.Login.logout()">logout</a>
+}

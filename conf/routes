@@ -16,3 +16,9 @@ GET     /transitions/:pose_id       controllers.Transitions.get(pose_id:Int)
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)
+
+# Auth
+GET        /login                 controllers.Login.login
+GET        /loginAction           controllers.Login.loginAction
+GET        /oauth2callback        controllers.Login.oauth2Callback
+GET        /logout                controllers.Login.logout
