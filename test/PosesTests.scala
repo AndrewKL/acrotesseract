@@ -29,4 +29,19 @@ class PosesTests{
     val result = route(app, request)
     assertEquals(404, result.status)
   }
+
+
+  @Test
+  def getNewPose(): Unit = {
+    val request = Helpers.fakeRequest.method(HttpVerbs.GET).uri("/poses/new")
+    val result = route(app, request)
+    assertEquals(200, result.status)
+  }
+
+  @Test
+  def getEditPose(): Unit = {
+    val request = Helpers.fakeRequest.method(HttpVerbs.GET).uri("/poses/1/edit")
+    val result = route(app, request)
+    assertEquals(200, result.status)
+  }
 }

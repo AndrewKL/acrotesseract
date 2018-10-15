@@ -16,7 +16,12 @@ POST    /poses/:pose_id/edit        controllers.Poses.postEditPose(pose_id:Long)
 
 # Poses
 GET     /transitions                controllers.Transitions.list()
-GET     /transitions/:pose_id       controllers.Transitions.get(pose_id:Int)
+GET     /transitions/new            controllers.Transitions.getNewTransition()
+POST    /transitions/new            controllers.Transitions.postNewTransition()
+GET     /transitions/:transition_id       controllers.Transitions.get(transition_id:Int)
+GET     /transitions/:transition_id/edit  controllers.Transitions.getEditTransition(transition_id:Long)
+POST    /transitions/:transition_id/edit  controllers.Transitions.postEditTransition(transition_id:Long)
+
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)

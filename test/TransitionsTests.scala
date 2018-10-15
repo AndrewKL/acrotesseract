@@ -29,4 +29,18 @@ class TransitionsTests{
     val result = route(app, request)
     assertEquals(404, result.status)
   }
+
+  @Test
+  def getNewTransitions(): Unit = {
+    val request = Helpers.fakeRequest.method(HttpVerbs.GET).uri("/transitions/new")
+    val result = route(app, request)
+    assertEquals(200, result.status)
+  }
+
+  @Test
+  def getEditTransition(): Unit = {
+    val request = Helpers.fakeRequest.method(HttpVerbs.GET).uri("/transitions/1/edit")
+    val result = route(app, request)
+    assertEquals(200, result.status)
+  }
 }

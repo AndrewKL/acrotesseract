@@ -3,8 +3,12 @@
 @(transition: Transition,fromPose:Pose,toPose:Pose)
 
 @main_with_navbar("Transition") {
-    Transition
+    <h2>Transition</h2>
+    <a href="@routes.Transitions.getEditTransition(transition.transition_id.get)" class="btn btn-primary">Edit</a>
     <div>Name: @transition.name</div>
+    <div><img href="@transition.image_url" /></div>
+    <div>@transition.description_md</div>
+
 
     <div>From: <a href="@routes.Poses.get(fromPose.pose_id.get)">@fromPose.name</a></div>
     <div>To: <a href="@routes.Poses.get(toPose.pose_id.get)">@toPose.name</a></div>

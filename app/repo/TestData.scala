@@ -89,7 +89,7 @@ class TestRepo extends PosesAndTransitionsTrait {
 
   override def insertTransition(transition: Transition): Long = ???
 
-  override def updateTransition(transition: Transition): Unit = ???
+  override def updateTransition(transition: Transition): Unit = {} // DO NOTHING
 
   override def deleteTransition(transitionId: Long): Unit = ???
 
