@@ -2,7 +2,8 @@
 @(poses: List[Pose])
 
 @main_with_navbar("List Poses") {
-    List Poses
+    <h2>List Poses</h2>
+    <a href="@routes.Poses.getNewPose()" class="btn btn-primary">New</a>
     <table class="table">
         <tr>
             <th>Name</th>

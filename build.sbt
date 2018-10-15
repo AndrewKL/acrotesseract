@@ -12,14 +12,14 @@ resolvers += "scalaz-bintray" at "https://dl.bintray.com/scalaz/releases"
 scalaVersion := "2.11.11"
 
 libraryDependencies ++= Seq( 
-  jdbc , 
-  cache , 
+  jdbc ,
   ws ,
   guice,
   "com.amazonaws" % "aws-java-sdk" % "1.11.421",
   "mysql" % "mysql-connector-java" % "8.0.12",
   "com.typesafe.play" %% "anorm" % "2.5.3",
   "com.gu" %% "play-googleauth" % "0.7.7",
+  "com.iterable" %% "iterableplayutils" % "2.0.0",
 
   "org.flywaydb" % "flyway-core" % "5.2.0" % Test,
   specs2 % Test,

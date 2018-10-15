@@ -8,7 +8,11 @@ GET     /admin                      controllers.Admin.index
 
 # Poses
 GET     /poses                      controllers.Poses.list()
-GET     /poses/:pose_id             controllers.Poses.get(pose_id:Int)
+GET     /poses/new                  controllers.Poses.getNewPose()
+POST    /poses/new                  controllers.Poses.postNewPose()
+GET     /poses/:pose_id             controllers.Poses.get(pose_id:Long)
+GET     /poses/:pose_id/edit        controllers.Poses.getEditPose(pose_id:Long)
+POST    /poses/:pose_id/edit        controllers.Poses.postEditPose(pose_id:Long)
 
 # Poses
 GET     /transitions                controllers.Transitions.list()

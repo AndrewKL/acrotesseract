@@ -5,7 +5,8 @@
 @main_with_navbar("List Poses") {
     <div class="pose">
         <h2>@pose.name</h2>
-        <img src="@pose.image_url" class="primary-pose-img">
+        <a href="@routes.Poses.getEditPose(pose.pose_id.get)" class="btn btn-primary">Edit</a>
+        <div><img src="@pose.image_url" class="primary-pose-img"></div>
         @if(pose.description_md != null){
             <p>@pose.description_md</p>
         }
@@ -34,5 +35,6 @@
                 </tr>
             }
         </table>
+        <a href="@routes.Poses.getEditPose(pose.pose_id.get)" class="btn btn-primary">Edit</a>
     </div>
 }

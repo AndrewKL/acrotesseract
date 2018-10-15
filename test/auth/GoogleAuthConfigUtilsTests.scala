@@ -6,12 +6,10 @@ import org.junit.Assert._
 
 class GoogleAuthConfigUtilsTests {
   @Test
-  def googleAuthSecret: Unit ={
+  def googleAuthSecretTests(): Unit ={
     val (clientId, clientSecret) = googleAuthSecret()
 
     assertNotNull(clientId)
     assertNotNull(clientSecret)
-
   }
-
 }

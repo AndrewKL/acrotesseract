@@ -79,9 +79,9 @@ class TestRepo extends PosesAndTransitionsTrait {
 
   override def getPose(poseId: Long): Option[Pose] = TestData.poses.find(x=>x.pose_id.getOrElse(-1) == poseId)
 
-  override def insertPose(pose: Pose): Long = ???
+  override def insertPose(pose: Pose): Long = 1 //DO NOTHING FOR TESTING
 
-  override def updatePose(pose: Pose): Unit = ???
+  override def updatePose(pose: Pose): Unit = {/* DO NOTHING */}
 
   override def deletePose(poseId: Long): Unit = ???
 
