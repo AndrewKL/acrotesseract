@@ -13,21 +13,21 @@ object TestData {
       pose_id = Option(2),
       name = "Bird",
       created_by = "Andrew",
-      image_url = "/assets/acrotesseract/img/poses/bird.jpeg",
+      image_url = Option("/assets/acrotesseract/img/poses/bird.jpeg"),
       description_md = "null"
     ),
     new Pose(
       pose_id = Option(3),
       name = "Star",
       created_by = "Andrew",
-      image_url = "/assets/acrotesseract/img/poses/star_side_view.jpg",
+      image_url = Option("/assets/acrotesseract/img/poses/star_side_view.jpg"),
       description_md = "null"
     ),
     new Pose(
       pose_id = Option(4),
       name = "Shoulder Stand",
       created_by = "Andrew",
-      image_url = "/assets/acrotesseract/img/poses/free_shoulder_stand.jpg",
+      image_url = Option("/assets/acrotesseract/img/poses/free_shoulder_stand.jpg"),
       description_md = "null"
     )
   )

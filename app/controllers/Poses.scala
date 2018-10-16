@@ -61,5 +61,5 @@ class Poses @Inject() (posesAndTransitions:PosesAndTransitionsTrait, user:Option
 }
 
 case class UIPose(name:String,image_url:String,description_md:String){
-  def toPose(createdBy:String) = new Pose(pose_id = Option.empty,name,createdBy,image_url,description_md)
+  def toPose(createdBy:String) = new Pose(pose_id = Option.empty,name,createdBy,Option(image_url),description_md)
 }

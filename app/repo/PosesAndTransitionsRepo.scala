@@ -23,15 +23,33 @@ class PosesAndTransitionsRepo @Inject()(db:AcroDb) extends PosesAndTransitionsTr
   }
 
   override def insertPose(pose:Pose): Long = db.withConnection { implicit conn =>
-    val sql = SQL("""INSERT INTO Poses(name,created_by,image_url,description_md) values ({name},{created_by},{image_url},{description_md})""")
-      .on('name-> pose.name,'created_by -> pose.created_by, 'image_url -> pose.image_url, 'description_md -> pose.description_md)
+    val sql = SQL(
+      """INSERT INTO Poses(name,created_by,image_url,description_md)
+        |VALUES ({name},{created_by},{image_url},{description_md})""".stripMargin)
+      .on(
+        "name" -> pose.name,
+        "created_by" -> pose.created_by,
+        "image_url" -> pose.image_url.get,
+        "description_md" -> pose.description_md)
+
     sql.executeInsert(scalar[Long].single)
   }
 
   override def updatePose(pose:Pose)= db.withConnection { implicit conn =>
-    val sql = SQL("""UPDATE Poses set name = {name}, createdBy,image_url,description_md) values ({name},{created_by},{image_url},{description_md})""")
-      .on('name-> pose.name,'created_by -> pose.created_by, 'image_url -> pose.image_url, 'description_md -> pose.description_md)
-    sql.executeInsert(scalar[Long].single)
+    val sql = SQL(
+      """UPDATE Poses set
+        | name = {name},
+        | created_by = {created_by},
+        | image_url = {image_url},
+        | description_md = {description_md}
+        |WHERE pose_id = {pose_id}""".stripMargin)
+      .on(
+        "name" -> pose.name,
+        "created_by" -> pose.created_by,
+        "image_url" -> pose.image_url,
+        "description_md" -> pose.description_md,
+        "pose_id" -> pose.pose_id.get)
+    sql.executeUpdate()
   }
 
   override def deletePose(poseId:Long)= db.withConnection { implicit conn =>
@@ -40,7 +58,11 @@ class PosesAndTransitionsRepo @Inject()(db:AcroDb) extends PosesAndTransitionsTr
     sql.execute()
   }
 
-  override def listPose(): List[Pose] = ???
+  override def listPose(): List[Pose] = db.withConnection { implicit conn =>
+    val parser: RowParser[Pose] = Macro.namedParser[Pose]
+    val sql = SQL("""SELECT * FROM Poses""")
+    sql.as(parser.*)
+  }
 
   override def getTransition(transitionId: Long): Option[Transition] = ???
 
@@ -57,6 +79,5 @@ class PosesAndTransitionsRepo @Inject()(db:AcroDb) extends PosesAndTransitionsTr
   override def listTransitionsToPose(poseId: Long): List[Transition] = ???
 }
 
-case class Pose(pose_id:Option[Int],name:String,created_by:String,image_url:String,description_md:String)
-case class Transition(transition_id:Option[Int],name:String,created_by:String,image_url:String,description_md:String,
-                      pose_from:Int, pose_to:Int)
+
+
