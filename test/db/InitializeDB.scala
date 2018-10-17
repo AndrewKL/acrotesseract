@@ -14,7 +14,7 @@ class InitializeDB {
   @Test
   @Ignore
   def migrateDB(): Unit = {
-    val config = new AcroConfig()
+    val config = AcroConfig.dev
     val usernamePw = AcroDb.getAcroTesseractSecret(config.dbPasswordSecretName)
 
     import org.flywaydb.core.Flyway
