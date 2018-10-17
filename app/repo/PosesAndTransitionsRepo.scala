@@ -64,20 +64,79 @@ class PosesAndTransitionsRepo @Inject()(db:AcroDb) extends PosesAndTransitionsTr
     sql.as(parser.*)
   }
 
-  override def getTransition(transitionId: Long): Option[Transition] = ???
+  override def getTransition(transitionId: Long): Option[Transition] = db.withConnection { implicit conn =>
+    val parser: RowParser[Transition] = Macro.namedParser[Transition]
+    val sql = SQL("""SELECT * FROM Transitions WHERE transition_id = {transition_id}""")
+    sql.on('transition_id-> transitionId).as(parser.*).headOption
+  }
 
-  override def insertTransition(transition: Transition): Long = ???
+  override def insertTransition(transition: Transition): Long = db.withConnection { implicit conn =>
+    val sql = SQL(
+      """INSERT INTO Transitions(name,created_by,description_md,pose_from,pose_to)
+        |VALUES ({name},{created_by},{description_md},{pose_from},{pose_to})""".stripMargin)
+      .on(
+        "name" -> transition.name,
+        "created_by" -> transition.created_by,
+        "description_md" -> transition.description_md,
+        "pose_from" -> transition.pose_from,
+        "pose_to" -> transition.pose_to)
 
-  override def updateTransition(transition: Transition): Unit = ???
+    sql.executeInsert(scalar[Long].single)
+  }
 
-  override def deleteTransition(transitionId: Long): Unit = ???
+  override def updateTransition(transition: Transition): Unit = db.withConnection { implicit conn =>
+    val sql = SQL(
+      """UPDATE Transitions set
+        | name = {name},
+        | created_by = {created_by},
+        | description_md = {description_md},
+        | pose_to = {pose_to},
+        | pose_from = {pose_from}
+        |WHERE transition_id = {transition_id}""".stripMargin)
+      .on(
+        "name" -> transition.name,
+        "created_by" -> transition.created_by,
+        "description_md" -> transition.description_md,
+        "pose_from" -> transition.pose_from,
+        "pose_to" -> transition.pose_to,
+        "transition_id" -> transition.transition_id.get
+      )
+    sql.executeUpdate()
+  }
 
-  override def listTransitions(): List[Transition] = ???
+  override def deleteTransition(transitionId: Long): Unit = db.withConnection { implicit conn =>
+    val sql = SQL("""DELETE FROM Transitions WHERE transition_id =  {transition_id}""")
+      .on('transition_id-> transitionId)
+    sql.execute()
+  }
 
-  override def listTransitionsFromPose(poseId: Long): List[Transition] = ???
+  override def listTransitions(): List[Transition] = db.withConnection { implicit conn =>
+    val parser: RowParser[Transition] = Macro.namedParser[Transition]
+    val sql = SQL("""SELECT * FROM Transitions""")
+    sql.as(parser.*)
+  }
 
-  override def listTransitionsToPose(poseId: Long): List[Transition] = ???
+  override def listTransitionsFromPose(poseId: Long): List[Transition] = db.withConnection { implicit conn =>
+    val parser: RowParser[Transition] = Macro.namedParser[Transition]
+    val sql = SQL("""SELECT * FROM Transitions WHERE pose_from = {poseId}""")
+      .on("poseId"->poseId)
+    sql.as(parser.*)
+  }
+
+  override def listTransitionsToPose(poseId: Long): List[Transition] = db.withConnection { implicit conn =>
+    val parser: RowParser[Transition] = Macro.namedParser[Transition]
+    val sql = SQL("""SELECT * FROM Transitions WHERE pose_to = {poseId}""")
+      .on("poseId"->poseId)
+    sql.as(parser.*)
+  }
+
+  def dumpDb():PosesTransitions = new PosesTransitions(
+    poses = listPose(),
+    transition = listTransitions()
+  )
 }
+
+case class PosesTransitions(poses:List[Pose],transition:List[Transition])
 
 
 

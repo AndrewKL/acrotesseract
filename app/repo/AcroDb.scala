@@ -10,13 +10,11 @@ import javax.inject.Singleton
 
 import scala.util.parsing.json.JSON
 
-object AcroDb{
+object AcroDb {
 
-  val acrotesseractDevJDBC = "jdbc:mysql://acrotesseract-db.cgccqt70jhl5.us-west-2.rds.amazonaws.com:3306/dev"
-
-  def getAcroTesseractSecret(): UsernamePW = {
-    val secretName = "acrotesseract-rds-username-pw"
+  def getAcroTesseractSecret(secretName:String): UsernamePW = {
     val region = "us-west-2"
+
     // Create a Secrets Manager client
     val client = AWSSecretsManagerClientBuilder.standard
       .withCredentials(new ProfileCredentialsProvider("acrotesseract"))
@@ -33,13 +31,6 @@ object AcroDb{
       case Some(map: Map[String, any]) => map("username").toString
     }
     return UsernamePW(username, pw)
-
-  }
-
-  lazy val devDb = {
-    val upw = getAcroTesseractSecret()
-    new AcroDb(acrotesseractDevJDBC,upw.username,upw.password)
-
   }
 }
 

@@ -37,7 +37,7 @@ class Transitions @Inject() (posesAndTransitions:PosesAndTransitionsTrait) exten
     } else {
       val transition = transitionForm.bindFromRequest().get.toTransition("TODO")
       val transitionId = posesAndTransitions.insertTransition(transition)
-      Redirect(routes.Transitions.get(transitionId.toInt))
+      Redirect(routes.Transitions.get(transitionId))
     }
   }
 
@@ -60,13 +60,11 @@ class Transitions @Inject() (posesAndTransitions:PosesAndTransitionsTrait) exten
   }
 }
 
-case class UITransition(name:String,image_url:String,description_md:String,
-                      pose_from:Int, pose_to:Int){
+case class UITransition(name:String,description_md:String,pose_from:Long, pose_to:Long){
   def toTransition(createdBy:String) = new Transition(
     Option.empty,
     name,
     createdBy,
-    image_url,
     description_md,
     pose_from,
     pose_to

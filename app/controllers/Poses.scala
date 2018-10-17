@@ -7,7 +7,7 @@ import play.api.data.Form
 import play.api.mvc.{Action, Controller, Request}
 import repo.{Pose, PosesAndTransitionsTrait, TestData}
 
-class Poses @Inject() (posesAndTransitions:PosesAndTransitionsTrait, user:Option[UserIdentity])
+class Poses @Inject() (posesAndTransitions:PosesAndTransitionsTrait)
   extends Controller  {
   val poseForm = Form(CaseClassMapping.mapping[UIPose])
 
@@ -61,5 +61,5 @@ class Poses @Inject() (posesAndTransitions:PosesAndTransitionsTrait, user:Option
 }
 
 case class UIPose(name:String,image_url:String,description_md:String){
-  def toPose(createdBy:String) = new Pose(pose_id = Option.empty,name,createdBy,Option(image_url),description_md)
+  def toPose(createdBy:String) = new Pose(pose_id = Option.empty,name,createdBy,Option(image_url),Option(description_md))
 }

@@ -2,35 +2,27 @@ package di
 
 import auth.GoogleAuthConfigUtils
 import com.google.inject.{AbstractModule, Provides}
-import com.gu.googleauth.{AntiForgeryChecker, AuthAction, GoogleAuthConfig, UserIdentity}
+import com.gu.googleauth.{AuthAction, GoogleAuthConfig}
 import controllers.routes
 import javax.inject.Singleton
-import play.api.Configuration
 import play.api.http.HttpConfiguration
-import play.api.mvc.{AnyContent, BodyParser, ControllerComponents, RequestHeader}
-import repo.{AcroDb, PosesAndTransitionsRepo, PosesAndTransitionsTrait, TestRepo}
+import play.api.mvc.{AnyContent, ControllerComponents}
+import repo.AcroDb.getAcroTesseractSecret
+import repo.{AcroDb, PosesAndTransitionsRepo, PosesAndTransitionsTrait}
 
 import scala.concurrent.ExecutionContext
 
 class AcroDIModule extends AbstractModule {
   override def configure(): Unit = {
-    val dev = true
-
-    bind(classOf[PosesAndTransitionsTrait]).toInstance(new TestRepo)
-
-
+    bind(classOf[PosesAndTransitionsTrait]).to(classOf[PosesAndTransitionsRepo])
   }
 
-  @Provides
-  @Singleton
-  def googleAuthConfig(configuration:Configuration, httpConfiguration: HttpConfiguration):GoogleAuthConfig =
-    GoogleAuthConfig.withNoDomainRestriction(
-      "clientid",
-      "sec",
-      "redir",
-      antiForgeryChecker = AntiForgeryChecker.borrowSettingsFromPlay(httpConfiguration)
-    )
-  //GoogleAuthConfigUtils.googleAuthConfig(configuration,httpConfiguration)
+  @Provides @Singleton
+  def config():AcroConfig = AcroConfig.dev
+
+  @Provides @Singleton
+  def googleAuthConfig(config:AcroConfig, httpConfiguration: HttpConfiguration):GoogleAuthConfig =
+    GoogleAuthConfigUtils.googleAuthConfig(config,httpConfiguration)
 
   @Provides
   def authAction(googleAuthConfig: GoogleAuthConfig, executionContext: ExecutionContext,
@@ -40,9 +32,9 @@ class AcroDIModule extends AbstractModule {
     components.parsers.anyContent
   )(executionContext)
 
-  @Provides
-  def getUserFromRequest()/*request: RequestHeader)*/:Option[UserIdentity] =
-    Option(UserIdentity("","email","firstname","lastname",1234,None))
-    //UserIdentity.fromRequest(request)
-
+  @Provides @Singleton
+  def getAcroDb(config:AcroConfig):AcroDb = {
+    val upw = getAcroTesseractSecret(secretName = config.dbPasswordSecretName)
+    new AcroDb(jdbc = config.acrotesseractDevJDBC,username = upw.username,pw = upw.password)
+  }
 }

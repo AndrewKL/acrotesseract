@@ -6,21 +6,22 @@ import org.junit.{Ignore, Test}
 
 import scala.util.parsing.json.JSON
 import com.amazonaws.services.secretsmanager.AWSSecretsManagerClientBuilder
+import di.AcroConfig
 import repo.AcroDb
+
 class InitializeDB {
-
-
 
   @Test
   @Ignore
   def migrateDB(): Unit = {
-    val usernamePw = AcroDb.getAcroTesseractSecret()
+    val config = new AcroConfig()
+    val usernamePw = AcroDb.getAcroTesseractSecret(config.dbPasswordSecretName)
 
     import org.flywaydb.core.Flyway
     // Create the Flyway instance and point it to the database// Create the Flyway instance and point it to the database
 
     val flyway: Flyway = Flyway.configure
-      .dataSource(AcroDb.acrotesseractDevJDBC, usernamePw.username, usernamePw.password)
+      .dataSource(config.acrotesseractDevJDBC, usernamePw.username, usernamePw.password)
       .load
 
     // Start the migration

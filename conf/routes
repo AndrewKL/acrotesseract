@@ -18,7 +18,7 @@ POST    /poses/:pose_id/edit        controllers.Poses.postEditPose(pose_id:Long)
 GET     /transitions                controllers.Transitions.list()
 GET     /transitions/new            controllers.Transitions.getNewTransition()
 POST    /transitions/new            controllers.Transitions.postNewTransition()
-GET     /transitions/:transition_id       controllers.Transitions.get(transition_id:Int)
+GET     /transitions/:transition_id       controllers.Transitions.get(transition_id:Long)
 GET     /transitions/:transition_id/edit  controllers.Transitions.getEditTransition(transition_id:Long)
 POST    /transitions/:transition_id/edit  controllers.Transitions.postEditTransition(transition_id:Long)
 

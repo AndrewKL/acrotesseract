@@ -7,28 +7,28 @@ object TestData {
       name = "Ground",
       created_by = "Andrew",
       image_url = null,
-      description_md = "null"
+      description_md = Option("null")
     ),
     new Pose(
       pose_id = Option(2),
       name = "Bird",
       created_by = "Andrew",
       image_url = Option("/assets/acrotesseract/img/poses/bird.jpeg"),
-      description_md = "null"
+      description_md = Option("null")
     ),
     new Pose(
       pose_id = Option(3),
       name = "Star",
       created_by = "Andrew",
       image_url = Option("/assets/acrotesseract/img/poses/star_side_view.jpg"),
-      description_md = "null"
+      description_md = Option("null")
     ),
     new Pose(
       pose_id = Option(4),
       name = "Shoulder Stand",
       created_by = "Andrew",
       image_url = Option("/assets/acrotesseract/img/poses/free_shoulder_stand.jpg"),
-      description_md = "null"
+      description_md = Option("null")
     )
   )
 
@@ -37,7 +37,6 @@ object TestData {
       transition_id = Option(1),
       name = "ground to bird",
       created_by = "Andrew",
-      image_url = null,
       description_md = null,
       pose_from = 1,
       pose_to = 2
@@ -46,7 +45,6 @@ object TestData {
       transition_id = Option(2),
       name = "shoulder stand",
       created_by = "Andrew",
-      image_url = null,
       description_md = null,
       pose_from = 2,
       pose_to = 4
@@ -55,7 +53,6 @@ object TestData {
       transition_id = Option(3),
       name = "Corkscrew up",
       created_by = "Andrew",
-      image_url = null,
       description_md = null,
       pose_from = 2,
       pose_to = 3
@@ -64,7 +61,6 @@ object TestData {
       transition_id = Option(3),
       name = "Corkscrew down",
       created_by = "Andrew",
-      image_url = null,
       description_md = null,
       pose_from = 3,
       pose_to = 2
