@@ -11,23 +11,19 @@ class AcroDbIntegrationTests {
     val upw = getAcroTesseractSecret(secretName = config.dbPasswordSecretName)
     new AcroDb(jdbc = config.acrotesseractDevJDBC,username = upw.username,pw = upw.password)
   }
-  @Ignore
+  
   @Test
   def countPoses(): Unit = {
     val repo = new PosesAndTransitionsRepo(acrodb)
-
     assertTrue(repo.countPoses() >= 0)
   }
-
-  @Ignore
+  
   @Test
-  def countTransistions(): Unit = {
+  def countTransitions(): Unit = {
     val repo = new PosesAndTransitionsRepo(acrodb)
-
     assertTrue(repo.countTransitions() >= 0)
   }
 
-  @Ignore
   @Test
   def insertGetUpdateDeletePose(): Unit = {
     val repo = new PosesAndTransitionsRepo(acrodb)
@@ -63,7 +59,6 @@ class AcroDbIntegrationTests {
     assertTrue(repo.countTransitions() >= 0)
   }
 
-  @Ignore
   @Test
   def listPoses(): Unit = {
     val repo = new PosesAndTransitionsRepo(acrodb)
@@ -73,7 +68,6 @@ class AcroDbIntegrationTests {
     assertNotNull(poses)
   }
 
-  @Ignore
   @Test
   def insertGetUpdateDeleteTransition(): Unit = {
     val repo = new PosesAndTransitionsRepo(acrodb)
@@ -120,7 +114,6 @@ class AcroDbIntegrationTests {
     assertTrue(repo.countTransitions() >= 0)
   }
 
-  @Ignore
   @Test
   def listTransitionsFromToPose(): Unit = {
     val repo = new PosesAndTransitionsRepo(acrodb)
@@ -150,8 +143,6 @@ class AcroDbIntegrationTests {
     assertNotNull(toResults)
   }
 
-
-  @Ignore
   @Test
   def dumpDb(): Unit = {
     val repo = new PosesAndTransitionsRepo(acrodb)

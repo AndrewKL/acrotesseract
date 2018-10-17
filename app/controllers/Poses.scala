@@ -4,22 +4,22 @@ import com.gu.googleauth.UserIdentity
 import com.iterable.play.utils.CaseClassMapping
 import javax.inject.Inject
 import play.api.data.Form
-import play.api.mvc.{Action, Controller, Request}
+import play.api.mvc.{Action, Controller, InjectedController, Request}
 import repo.{Pose, PosesAndTransitionsTrait, TestData}
 
-class Poses @Inject() (posesAndTransitions:PosesAndTransitionsTrait)
-  extends Controller  {
+class Poses @Inject() (repo:PosesAndTransitionsTrait)
+  extends InjectedController  {
   val poseForm = Form(CaseClassMapping.mapping[UIPose])
 
   def list = Action { implicit request =>
-    Ok(views.html.poses_list(posesAndTransitions.listPose()))
+    Ok(views.html.poses_list(repo.listPose()))
   }
 
   def get(pose_id:Long) = Action { implicit request =>
-    posesAndTransitions.getPose(pose_id) match {
+    repo.getPose(pose_id) match {
       case Some(pose) => {
-        val transitionsFrom = posesAndTransitions.listTransitionsFromPose(pose.pose_id.get)
-        val transitionsTo = posesAndTransitions.listTransitionsToPose(pose.pose_id.get)
+        val transitionsFrom = repo.listTransitionsFromPose(pose.pose_id.get)
+        val transitionsTo = repo.listTransitionsToPose(pose.pose_id.get)
         Ok(views.html.poses_pose(pose,transitionsFrom,transitionsTo))
       }
       case None => NotFound("Not found")
@@ -36,13 +36,13 @@ class Poses @Inject() (posesAndTransitions:PosesAndTransitionsTrait)
       BadRequest(s"BAD REQUEST: ${errors}")
     } else {
       val pose = poseForm.bindFromRequest().get.toPose("TODO")
-      val poseId = posesAndTransitions.insertPose(pose)
+      val poseId = repo.insertPose(pose)
       Redirect(routes.Poses.get(poseId))
     }
   }
 
   def getEditPose(pose_id:Long) = Action { implicit request =>
-    posesAndTransitions.getPose(pose_id) match {
+    repo.getPose(pose_id) match {
       case Some(pose) => Ok(views.html.poses_pose_add_edit(pose))
       case None => NotFound("Not found")
     }
@@ -54,9 +54,14 @@ class Poses @Inject() (posesAndTransitions:PosesAndTransitionsTrait)
       BadRequest(s"BAD REQUEST: ${errors}")
     } else {
       val pose = poseForm.bindFromRequest().get.toPose("TODO")
-      posesAndTransitions.updatePose(pose)
+      repo.updatePose(pose)
       Redirect(routes.Poses.get(pose_id))
     }
+  }
+
+  def postDeletePose(pose_id:Long) = Action { implicit request =>
+    repo.deletePose(pose_id)
+    Redirect(routes.Poses.list())
   }
 }
 

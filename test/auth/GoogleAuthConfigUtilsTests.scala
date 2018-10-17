@@ -7,8 +7,8 @@ import org.junit.Assert._
 
 class GoogleAuthConfigUtilsTests {
   @Test
-  def googleAuthSecretTests(): Unit ={
-    val (clientId, clientSecret) = googleAuthSecret(new AcroConfig().googleAuthSecretName)
+  def googleAuthSecretTests(): Unit = {
+    val (clientId, clientSecret) = googleAuthSecret(AcroConfig.dev.googleAuthSecretName)
 
     assertNotNull(clientId)
     assertNotNull(clientSecret)

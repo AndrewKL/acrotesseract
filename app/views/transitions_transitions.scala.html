@@ -1,6 +1,8 @@
 @import repo.Transition
 @import repo.Pose
-@(transition: Transition,fromPose:Pose,toPose:Pose)
+@import helper._
+
+@(transition: Transition,fromPose:Pose,toPose:Pose)(implicit request: RequestHeader)
 
 @main_with_navbar("Transition") {
     <h2>Transition</h2>
@@ -8,7 +10,10 @@
     <div>Name: @transition.name</div>
     <div>@transition.description_md</div>
 
-
     <div>From: <a href="@routes.Poses.get(fromPose.pose_id.get)">@fromPose.name</a></div>
     <div>To: <a href="@routes.Poses.get(toPose.pose_id.get)">@toPose.name</a></div>
+    <form action="@routes.Transitions.postDeleteTransition(transition.transition_id.get)" method="post">
+        <input type="submit" value="Delete" class="btn-danger">
+        @CSRF.formField
+    </form>
 }

@@ -1,6 +1,8 @@
 @import repo.Pose
 @import repo.Transition
-@(pose: Pose,transFrom:List[Transition],transTo:List[Transition])
+@import helper._
+
+@(pose: Pose,transFrom:List[Transition],transTo:List[Transition])(implicit request: RequestHeader)
 
 @main_with_navbar("List Poses") {
     <div class="pose">
@@ -36,5 +38,9 @@
             }
         </table>
         <a href="@routes.Poses.getEditPose(pose.pose_id.get)" class="btn btn-primary">Edit</a>
+        <form action="@routes.Poses.postDeletePose(pose.pose_id.get)" method="post">
+            <input type="submit" value="Delete" class="btn-danger">
+            @CSRF.formField
+        </form>
     </div>
 }

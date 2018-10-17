@@ -10,11 +10,11 @@ import repo.{PosesAndTransitionsTrait, TestData, Transition}
 class Transitions @Inject() (posesAndTransitions:PosesAndTransitionsTrait) extends InjectedController {
   val transitionForm = Form(CaseClassMapping.mapping[UITransition])
 
-  def list = Action {
+  def list = Action { implicit request =>
     Ok(views.html.transitions_list(posesAndTransitions.listTransitions()))
   }
 
-  def get(transition_id: Long) = Action {
+  def get(transition_id: Long) = Action { implicit request =>
     posesAndTransitions.getTransition(transition_id) match {
       case Some(transition) => {
         val from = posesAndTransitions.getPose(transition.pose_from).get
@@ -57,6 +57,11 @@ class Transitions @Inject() (posesAndTransitions:PosesAndTransitionsTrait) exten
       posesAndTransitions.updateTransition(transition)
       Redirect(routes.Transitions.get(transition_id.toInt))
     }
+  }
+
+  def postDeleteTransition(transition_id:Long) = Action { implicit request =>
+    posesAndTransitions.deleteTransition(transition_id)
+    Redirect(routes.Transitions.list())
   }
 }
 

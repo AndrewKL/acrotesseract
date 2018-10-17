@@ -11,6 +11,7 @@ GET     /poses                      controllers.Poses.list()
 GET     /poses/new                  controllers.Poses.getNewPose()
 POST    /poses/new                  controllers.Poses.postNewPose()
 GET     /poses/:pose_id             controllers.Poses.get(pose_id:Long)
+POST    /poses/:pose_id/delete      controllers.Poses.postDeletePose(pose_id:Long)
 GET     /poses/:pose_id/edit        controllers.Poses.getEditPose(pose_id:Long)
 POST    /poses/:pose_id/edit        controllers.Poses.postEditPose(pose_id:Long)
 
@@ -18,10 +19,10 @@ POST    /poses/:pose_id/edit        controllers.Poses.postEditPose(pose_id:Long)
 GET     /transitions                controllers.Transitions.list()
 GET     /transitions/new            controllers.Transitions.getNewTransition()
 POST    /transitions/new            controllers.Transitions.postNewTransition()
-GET     /transitions/:transition_id       controllers.Transitions.get(transition_id:Long)
-GET     /transitions/:transition_id/edit  controllers.Transitions.getEditTransition(transition_id:Long)
-POST    /transitions/:transition_id/edit  controllers.Transitions.postEditTransition(transition_id:Long)
-
+GET     /transitions/:transition_id              controllers.Transitions.get(transition_id:Long)
+POST    /transitions/:transition_id/delete       controllers.Transitions.postDeleteTransition(transition_id:Long)
+GET     /transitions/:transition_id/edit         controllers.Transitions.getEditTransition(transition_id:Long)
+POST    /transitions/:transition_id/edit         controllers.Transitions.postEditTransition(transition_id:Long)
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)

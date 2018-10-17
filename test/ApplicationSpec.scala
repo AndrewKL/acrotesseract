@@ -6,11 +6,9 @@ import play.test.Helpers
 import play.test.Helpers._
 
 
-class ApplicationTests{
+class ApplicationTests {
 
   val app: Application = fakeApplication()
-
-  //val app: Application = fakeApplication(inMemoryDatabase("test"))
 
   @Test
   def testBadRoute(): Unit = {
