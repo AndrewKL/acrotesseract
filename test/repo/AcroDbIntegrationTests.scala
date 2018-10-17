@@ -7,7 +7,7 @@ import repo.AcroDb.getAcroTesseractSecret
 
 class AcroDbIntegrationTests {
   lazy val acrodb = {
-    val config = new AcroConfig()
+    val config = AcroConfig.dev
     val upw = getAcroTesseractSecret(secretName = config.dbPasswordSecretName)
     new AcroDb(jdbc = config.acrotesseractDevJDBC,username = upw.username,pw = upw.password)
   }
