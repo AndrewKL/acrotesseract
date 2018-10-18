@@ -13,21 +13,25 @@ class InitializeDB {
 
   @Test
   @Ignore
-  def migrateDB(): Unit = {
-    val config = AcroConfig.dev
+  def migrateDB_dev(): Unit = migrateDB(AcroConfig.dev)
+
+  @Test
+  @Ignore
+  def migrateDB_prod(): Unit = migrateDB(AcroConfig.prod)
+
+  def migrateDB(config:AcroConfig): Unit = {
     val usernamePw = AcroDb.getAcroTesseractSecret(config.dbPasswordSecretName)
 
     import org.flywaydb.core.Flyway
     // Create the Flyway instance and point it to the database// Create the Flyway instance and point it to the database
 
     val flyway: Flyway = Flyway.configure
-      .dataSource(config.acrotesseractDevJDBC, usernamePw.username, usernamePw.password)
+      .dataSource(config.jdbcString, usernamePw.username, usernamePw.password)
       .load
 
     // Start the migration
     flyway.repair()
     flyway.migrate()
   }
-
 }
 

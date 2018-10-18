@@ -6,8 +6,24 @@
 
 @main_with_navbar("List Poses") {
     <div class="pose">
-        <h2>@pose.name</h2>
-        <a href="@routes.Poses.getEditPose(pose.pose_id.get)" class="btn btn-primary">Edit</a>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <a class="navbar-brand" href="#">Pose: @pose.name</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item">
+                        <a href="@routes.Poses.getEditPose(pose.pose_id.get)" class="nav-link">Edit</a>
+                    </li>
+                </ul>
+                <form class="form-inline my-2 my-lg-0"  action="@routes.Poses.postDeletePose(pose.pose_id.get)" method="post">
+                    <button class="btn btn-outline-danger my-2 my-sm-0" type="submit"
+                            onclick="return confirm('are you sure?')">Delete</button>
+                </form>
+            </div>
+        </nav>
         <div><img src="@pose.image_url" class="primary-pose-img"></div>
         @if(pose.description_md != null){
             <p>@pose.description_md</p>
@@ -37,10 +53,5 @@
                 </tr>
             }
         </table>
-        <a href="@routes.Poses.getEditPose(pose.pose_id.get)" class="btn btn-primary">Edit</a>
-        <form action="@routes.Poses.postDeletePose(pose.pose_id.get)" method="post">
-            <input type="submit" value="Delete" class="btn-danger">
-            @CSRF.formField
-        </form>
     </div>
 }

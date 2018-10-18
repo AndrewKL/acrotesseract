@@ -9,7 +9,7 @@ class AcroDbIntegrationTests {
   lazy val acrodb = {
     val config = AcroConfig.dev
     val upw = getAcroTesseractSecret(secretName = config.dbPasswordSecretName)
-    new AcroDb(jdbc = config.acrotesseractDevJDBC,username = upw.username,pw = upw.password)
+    new AcroDb(jdbc = config.jdbcString,username = upw.username,pw = upw.password)
   }
   
   @Test

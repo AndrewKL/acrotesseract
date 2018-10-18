@@ -54,7 +54,7 @@ class Transitions @Inject() (posesAndTransitions:PosesAndTransitionsTrait) exten
       BadRequest(s"BAD REQUEST: ${errors}")
     } else {
       val transition = transitionForm.bindFromRequest().get.toTransition("TODO")
-      posesAndTransitions.updateTransition(transition)
+      posesAndTransitions.updateTransition(transition.copy(transition_id = Option(transition_id)))
       Redirect(routes.Transitions.get(transition_id.toInt))
     }
   }

@@ -18,7 +18,7 @@ class AcroDIModule extends AbstractModule {
   }
 
   @Provides @Singleton
-  def config():AcroConfig = AcroConfig.dev
+  def config():AcroConfig = AcroConfig.prod
 
   @Provides @Singleton
   def googleAuthConfig(config:AcroConfig, httpConfiguration: HttpConfiguration):GoogleAuthConfig =
@@ -35,6 +35,6 @@ class AcroDIModule extends AbstractModule {
   @Provides @Singleton
   def getAcroDb(config:AcroConfig):AcroDb = {
     val upw = getAcroTesseractSecret(secretName = config.dbPasswordSecretName)
-    new AcroDb(jdbc = config.acrotesseractDevJDBC,username = upw.username,pw = upw.password)
+    new AcroDb(jdbc = config.jdbcString,username = upw.username,pw = upw.password)
   }
 }

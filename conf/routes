@@ -5,6 +5,7 @@
 # Home page
 GET     /                           controllers.Application.index
 GET     /admin                      controllers.Admin.index
+GET     /admin/ping                 controllers.Admin.ping
 
 # Poses
 GET     /poses                      controllers.Poses.list()

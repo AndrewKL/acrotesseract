@@ -1,8 +1,11 @@
-@(numberOfPoses: Long,numberOfTransitions:Long, username:String, isEditor:Boolean)
+@(numberOfPoses: Long,numberOfTransitions:Long, username:String, isEditor:Boolean,jdbc:String)
 
 @main_with_navbar("Acro Tesseract: Admin page") {
-    username: @username
-    is editor: @isEditor
-    number of poses: @numberOfPoses
-    number of transitions: @numberOfTransitions
+    <ul>
+        <li>username: @username</li>
+        <li>is editor: @isEditor</li>
+        <li>number of poses: @numberOfPoses</li>
+        <li>number of transitions: @numberOfTransitions</li>
+        <li>jdbc: @jdbc</li>
+    </ul>
 }

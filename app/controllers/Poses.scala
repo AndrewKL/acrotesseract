@@ -54,7 +54,7 @@ class Poses @Inject() (repo:PosesAndTransitionsTrait)
       BadRequest(s"BAD REQUEST: ${errors}")
     } else {
       val pose = poseForm.bindFromRequest().get.toPose("TODO")
-      repo.updatePose(pose)
+      repo.updatePose(pose.copy(pose_id = Option(pose_id)))
       Redirect(routes.Poses.get(pose_id))
     }
   }
