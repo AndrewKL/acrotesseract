@@ -6,6 +6,7 @@
 GET     /                           controllers.Application.index
 GET     /admin                      controllers.Admin.index
 GET     /admin/ping                 controllers.Admin.ping
+GET     /isalive                    controllers.IsAlive.isAlive
 
 # Poses
 GET     /poses                      controllers.Poses.list()

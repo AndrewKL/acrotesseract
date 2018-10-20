@@ -15,7 +15,7 @@ libraryDependencies ++= Seq(
   jdbc ,
   ws ,
   guice,
-  "com.amazonaws" % "aws-java-sdk" % "1.11.421",
+  "com.amazonaws" % "aws-java-sdk-secretsmanager" % "1.11.430",
   "mysql" % "mysql-connector-java" % "8.0.12",
   "com.typesafe.play" %% "anorm" % "2.5.3",
   "com.gu" %% "play-googleauth" % "0.7.7",

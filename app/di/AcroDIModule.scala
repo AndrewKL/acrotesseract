@@ -1,6 +1,8 @@
 package di
 
 import auth.GoogleAuthConfigUtils
+import com.amazonaws.auth.{AWSCredentialsProvider, DefaultAWSCredentialsProviderChain}
+import com.amazonaws.services.secretsmanager.{AWSSecretsManager, AWSSecretsManagerClientBuilder}
 import com.google.inject.{AbstractModule, Provides}
 import com.gu.googleauth.{AuthAction, GoogleAuthConfig}
 import controllers.routes
@@ -21,8 +23,11 @@ class AcroDIModule extends AbstractModule {
   def config():AcroConfig = AcroConfig.prod
 
   @Provides @Singleton
-  def googleAuthConfig(config:AcroConfig, httpConfiguration: HttpConfiguration):GoogleAuthConfig =
-    GoogleAuthConfigUtils.googleAuthConfig(config,httpConfiguration)
+  def credProvider(config:AcroConfig):AWSCredentialsProvider = new DefaultAWSCredentialsProviderChain()
+
+  @Provides @Singleton
+  def googleAuthConfig(config:AcroConfig, httpConfiguration: HttpConfiguration,creds:AWSCredentialsProvider):GoogleAuthConfig =
+    GoogleAuthConfigUtils.googleAuthConfig(config,httpConfiguration,creds)
 
   @Provides
   def authAction(googleAuthConfig: GoogleAuthConfig, executionContext: ExecutionContext,
@@ -33,8 +38,12 @@ class AcroDIModule extends AbstractModule {
   )(executionContext)
 
   @Provides @Singleton
-  def getAcroDb(config:AcroConfig):AcroDb = {
-    val upw = getAcroTesseractSecret(secretName = config.dbPasswordSecretName)
+  def getAcroDb(config:AcroConfig,creds:AWSCredentialsProvider):AcroDb = {
+    val upw = getAcroTesseractSecret(secretName = config.dbPasswordSecretName,creds)
     new AcroDb(jdbc = config.jdbcString,username = upw.username,pw = upw.password)
   }
+
+  @Provides
+  def secretsClient(creds:AWSCredentialsProvider):AWSSecretsManager =
+    AWSSecretsManagerClientBuilder.standard().withCredentials(creds).withRegion("us-west-2").build
 }

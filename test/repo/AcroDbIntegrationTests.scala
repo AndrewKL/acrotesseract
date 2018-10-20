@@ -1,5 +1,6 @@
 package repo
 
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
 import di.AcroConfig
 import org.junit.Assert._
 import org.junit.{Ignore, Test}
@@ -8,7 +9,7 @@ import repo.AcroDb.getAcroTesseractSecret
 class AcroDbIntegrationTests {
   lazy val acrodb = {
     val config = AcroConfig.dev
-    val upw = getAcroTesseractSecret(secretName = config.dbPasswordSecretName)
+    val upw = getAcroTesseractSecret(secretName = config.dbPasswordSecretName,new DefaultAWSCredentialsProviderChain)
     new AcroDb(jdbc = config.jdbcString,username = upw.username,pw = upw.password)
   }
   

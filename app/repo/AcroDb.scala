@@ -2,22 +2,21 @@ package repo
 
 import java.sql.Connection
 
-import com.amazonaws.auth.profile.ProfileCredentialsProvider
+import com.amazonaws.auth.AWSCredentialsProvider
 import com.amazonaws.services.secretsmanager.AWSSecretsManagerClientBuilder
 import com.amazonaws.services.secretsmanager.model.GetSecretValueRequest
 import com.jolbox.bonecp.{BoneCP, BoneCPConfig}
-import javax.inject.Singleton
 
 import scala.util.parsing.json.JSON
 
 object AcroDb {
 
-  def getAcroTesseractSecret(secretName:String): UsernamePW = {
+  def getAcroTesseractSecret(secretName:String,creds:AWSCredentialsProvider): UsernamePW = {
     val region = "us-west-2"
 
     // Create a Secrets Manager client
     val client = AWSSecretsManagerClientBuilder.standard
-      .withCredentials(new ProfileCredentialsProvider("acrotesseract"))
+      .withCredentials(creds)
       .withRegion(region).build
 
     val getSecretValueRequest = new GetSecretValueRequest().withSecretId(secretName)
