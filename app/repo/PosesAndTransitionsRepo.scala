@@ -3,6 +3,8 @@ package repo
 import anorm._
 import anorm.SqlParser._
 import javax.inject.{Inject, Singleton}
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 @Singleton
 class PosesAndTransitionsRepo @Inject()(db:AcroDb) extends PosesAndTransitionsTrait {
@@ -32,7 +34,25 @@ class PosesAndTransitionsRepo @Inject()(db:AcroDb) extends PosesAndTransitionsTr
         "image_url" -> pose.image_url.get,
         "description_md" -> pose.description_md)
 
-    sql.executeInsert(scalar[Long].single)
+    val id = sql.executeInsert(scalar[Long].single)
+
+    insertPoseVersion(pose.copy(pose_id = Option(id)))
+
+    id
+  }
+
+  def insertPoseVersion(pose:Pose): Unit = db.withConnection { implicit conn =>
+    val sql = SQL(
+      """INSERT INTO PosesVersions(pose_id,name,updated_ts,created_by,image_url,description_md)
+        |VALUES ({pose_id},{name},NOW(),{created_by},{image_url},{description_md})""".stripMargin)
+      .on(
+        "pose_id" -> pose.pose_id.get,
+        "name" -> pose.name,
+        "created_by" -> pose.created_by,
+        "image_url" -> pose.image_url.get,
+        "description_md" -> pose.description_md)
+
+    sql.executeInsert()
   }
 
   override def updatePose(pose:Pose)= db.withConnection { implicit conn =>
@@ -78,6 +98,7 @@ class PosesAndTransitionsRepo @Inject()(db:AcroDb) extends PosesAndTransitionsTr
   }
 
   override def insertTransition(transition: Transition): Long = db.withConnection { implicit conn =>
+
     val sql = SQL(
       """INSERT INTO Transitions(name,created_by,description_md,pose_from,pose_to)
         |VALUES ({name},{created_by},{description_md},{pose_from},{pose_to})""".stripMargin)
@@ -88,10 +109,30 @@ class PosesAndTransitionsRepo @Inject()(db:AcroDb) extends PosesAndTransitionsTr
         "pose_from" -> transition.pose_from,
         "pose_to" -> transition.pose_to)
 
-    sql.executeInsert(scalar[Long].single)
+    val id = sql.executeInsert(scalar[Long].single)
+
+    insertTransitionVersion(transition.copy(transition_id = Option(id)))
+
+    return id
+  }
+
+  def insertTransitionVersion(transition: Transition): Unit = db.withConnection { implicit conn =>
+    val sql = SQL(
+      """INSERT INTO TransitionsVersions(transition_id,name,updated_ts,created_by,description_md,pose_from,pose_to)
+        |VALUES ({transition_id},{name},NOW(),{created_by},{description_md},{pose_from},{pose_to})""".stripMargin)
+      .on(
+        "transition_id" -> transition.transition_id.get,
+        "name" -> transition.name,
+        "created_by" -> transition.created_by,
+        "description_md" -> transition.description_md,
+        "pose_from" -> transition.pose_from,
+        "pose_to" -> transition.pose_to)
+
+    sql.executeInsert()
   }
 
   override def updateTransition(transition: Transition): Unit = db.withConnection { implicit conn =>
+    insertTransitionVersion(transition)
     val sql = SQL(
       """UPDATE Transitions set
         | name = {name},

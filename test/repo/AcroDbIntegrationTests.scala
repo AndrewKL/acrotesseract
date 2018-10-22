@@ -122,6 +122,8 @@ class AcroDbIntegrationTests {
 
     val modified = reloaded.copy(name = "new name")
 
+    Thread.sleep(1000)
+
     repo.updateTransition(modified)
 
     val reloadedModified = repo.getTransition(id).get
