@@ -21,6 +21,7 @@
                 <form class="form-inline my-2 my-lg-0"  action="@routes.Poses.postDeletePose(pose.pose_id.get)" method="post">
                     <button class="btn btn-outline-danger my-2 my-sm-0" type="submit"
                             onclick="return confirm('are you sure?')">Delete</button>
+                    @CSRF.formField
                 </form>
             </div>
         </nav>
