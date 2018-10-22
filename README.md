@@ -36,3 +36,12 @@ There should be a randomly named log file that looks like..
 > /var/log/eb-docker/containers/eb-current-app/937e1b7b26ef-stdouterr.log
 
 that contains plays logs
+
+# Auth
+
+auth is handled by google via a SSO and the clientId + secret is stored in aws secret manager
+
+https://developers.google.com/identity/sign-in/web/sign-in
+
+
+

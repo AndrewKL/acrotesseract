@@ -1,6 +1,6 @@
-@(title: String)(content: Html)
+@(title: String, scripts: Html = Html(""))(content: Html)
 
-@main("Welcome to Acro Tesseract") {
+@main("Welcome to Acro Tesseract",scripts) {
     <!-- Navbar -->
     <header>
         <div class="bg-dark collapse" id="navbarHeader">
@@ -37,9 +37,7 @@
     <!--Main layout-->
 
     <main>
-        <div class="container"><div class="row"></div></div></div>
         <div class="container">
-
         @content
         </div>
     </main>

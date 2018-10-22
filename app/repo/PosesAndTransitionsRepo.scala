@@ -64,6 +64,13 @@ class PosesAndTransitionsRepo @Inject()(db:AcroDb) extends PosesAndTransitionsTr
     sql.as(parser.*)
   }
 
+  override def searchPose(searchText:String): List[Pose] = db.withConnection { implicit conn =>
+    val parser: RowParser[Pose] = Macro.namedParser[Pose]
+    val sql = SQL("""SELECT * FROM Poses WHERE name LIKE {searchText}  LIMIT 10""")
+      .on("searchText" -> s"${searchText.toLowerCase}%")
+    sql.as(parser.*)
+  }
+
   override def getTransition(transitionId: Long): Option[Transition] = db.withConnection { implicit conn =>
     val parser: RowParser[Transition] = Macro.namedParser[Transition]
     val sql = SQL("""SELECT * FROM Transitions WHERE transition_id = {transition_id}""")
@@ -113,6 +120,13 @@ class PosesAndTransitionsRepo @Inject()(db:AcroDb) extends PosesAndTransitionsTr
   override def listTransitions(): List[Transition] = db.withConnection { implicit conn =>
     val parser: RowParser[Transition] = Macro.namedParser[Transition]
     val sql = SQL("""SELECT * FROM Transitions""")
+    sql.as(parser.*)
+  }
+
+  def searchTransitions(searchText:String): List[Transition]= db.withConnection { implicit conn =>
+    val parser: RowParser[Transition] = Macro.namedParser[Transition]
+    val sql = SQL("""SELECT * FROM Transitions WHERE name LIKE {searchText} LIMIT 10""")
+      .on("searchText" -> s"${searchText.toLowerCase}%")
     sql.as(parser.*)
   }
 

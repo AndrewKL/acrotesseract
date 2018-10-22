@@ -10,6 +10,8 @@ trait PosesAndTransitionsTrait {
 
   def listPose(): List[Pose]
 
+  def searchPose(searchText:String): List[Pose]
+
   def insertPose(pose: Pose): Long
 
   def updatePose(pose: Pose)
@@ -19,6 +21,8 @@ trait PosesAndTransitionsTrait {
   def getTransition(transitionId: Long): Option[Transition]
 
   def listTransitions():List[Transition]
+
+  def searchTransitions(searchText:String): List[Transition]
 
   def listTransitionsFromPose(poseId:Long): List[Transition]
 

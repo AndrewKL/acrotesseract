@@ -1,10 +1,26 @@
-@(message: String)
+@scripts = {
+    <script src="/assets/javascripts/search.js"></script>
+}
+@main_with_navbar("Acro Tesseract",scripts) {
+    <!-- Search form -->
+    <i class="fa fa-search" aria-hidden="true"></i>
+    <input id="search-text" class="form-control form-control-sm ml-3 w-75" type="text" placeholder="Search" aria-label="Search">
 
-@main_with_navbar("Welcome to Acro Tesseract") {
-
-    @message
-
-    <a href="/poses">Poses</a>
-    <a href="/transitions">Transitions</a>
+    <div id="search-results" class="search-results"></div>
+    <script id="search-template" type="text/x-handlebars-template">
+        <h3><a href="/poses">Poses</a></h3>
+        <ul class="pose-list">
+        {{#each poses}}
+        <li><a href="/poses/{{pose_id}}">{{this.name}}</a></li>
+        {{/each}}
+        </ul>
+        <h3><a href="/transitions">Transitions</a></h3>
+        <ul class="transition-list">
+        {{#each transitions}}
+        <li><a href="/transitions/{{transition_id}}">{{this.name}}</a></li>
+        {{/each}}
+        </ul>
+    </script>
 
 }
+

@@ -70,6 +70,24 @@ class AcroDbIntegrationTests {
   }
 
   @Test
+  def searchPoses(): Unit = {
+    val repo = new PosesAndTransitionsRepo(acrodb)
+
+    val poses = repo.searchPose("ground")
+
+    assertNotNull(poses)
+  }
+
+  @Test
+  def searchTransitions(): Unit = {
+    val repo = new PosesAndTransitionsRepo(acrodb)
+
+    val poses = repo.searchTransitions("ground")
+
+    assertNotNull(poses)
+  }
+
+  @Test
   def insertGetUpdateDeleteTransition(): Unit = {
     val repo = new PosesAndTransitionsRepo(acrodb)
 

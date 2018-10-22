@@ -28,4 +28,8 @@ class TestRepo extends PosesAndTransitionsTrait {
   override def listTransitionsFromPose(poseId: Long): List[Transition] = TestData.transitions.filter(x=>x.pose_from == poseId)
 
   override def listTransitionsToPose(poseId: Long): List[Transition] = TestData.transitions.filter(x=>x.pose_to == poseId)
+
+  override def searchPose(searchText: String): List[Pose] = ???
+
+  override def searchTransitions(searchText: String): List[Transition] = ???
 }

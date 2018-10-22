@@ -1,4 +1,4 @@
-@(title: String)(content: Html)
+@(title: String, scripts: Html = Html(""))(content: Html)
 
 <!DOCTYPE html>
 
@@ -34,5 +34,8 @@
         <script src="/assets/library/popper.min.js"></script>
         <script src="/assets/library/bootstrap.min.js"></script>
         <script src="/assets/library/holder.min.js"></script>
+        <script src="/assets/library/handlebars-v4.0.12.js"></script>
+        <script src="/assets/javascripts/throttle-debounce.js"></script>
+        @scripts
     </body>
 </html>

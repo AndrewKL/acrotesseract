@@ -8,6 +8,8 @@ GET     /admin                      controllers.Admin.index
 GET     /admin/ping                 controllers.Admin.ping
 GET     /isalive                    controllers.IsAlive.isAlive
 
+GET     /search                     controllers.Search.search(searchText:Option[String])
+
 # Poses
 GET     /poses                      controllers.Poses.list()
 GET     /poses/new                  controllers.Poses.getNewPose()
