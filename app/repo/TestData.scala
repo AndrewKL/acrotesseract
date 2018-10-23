@@ -39,7 +39,8 @@ object TestData {
       created_by = "Andrew",
       description_md = null,
       pose_from = 1,
-      pose_to = 2
+      pose_to = 2,
+      Option("https://youtu.be/g8OhDBRwhSw?t=403")
     ),
     new Transition(
       transition_id = Option(2),
@@ -47,7 +48,8 @@ object TestData {
       created_by = "Andrew",
       description_md = null,
       pose_from = 2,
-      pose_to = 4
+      pose_to = 4,
+      Option("https://youtu.be/g8OhDBRwhSw?t=403")
     ),
     new Transition(
       transition_id = Option(3),
@@ -55,7 +57,8 @@ object TestData {
       created_by = "Andrew",
       description_md = null,
       pose_from = 2,
-      pose_to = 3
+      pose_to = 3,
+      Option("https://youtu.be/g8OhDBRwhSw?t=403")
     ),
     new Transition(
       transition_id = Option(3),
@@ -63,7 +66,8 @@ object TestData {
       created_by = "Andrew",
       description_md = null,
       pose_from = 3,
-      pose_to = 2
+      pose_to = 2,
+      Option("https://youtu.be/g8OhDBRwhSw?t=403")
     )
   )
 }

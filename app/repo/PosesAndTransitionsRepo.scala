@@ -100,14 +100,15 @@ class PosesAndTransitionsRepo @Inject()(db:AcroDb) extends PosesAndTransitionsTr
   override def insertTransition(transition: Transition): Long = db.withConnection { implicit conn =>
 
     val sql = SQL(
-      """INSERT INTO Transitions(name,created_by,description_md,pose_from,pose_to)
-        |VALUES ({name},{created_by},{description_md},{pose_from},{pose_to})""".stripMargin)
+      """INSERT INTO Transitions(name,created_by,description_md,pose_from,pose_to,youtube_url)
+        |VALUES ({name},{created_by},{description_md},{pose_from},{pose_to},{youtube_url})""".stripMargin)
       .on(
         "name" -> transition.name,
         "created_by" -> transition.created_by,
         "description_md" -> transition.description_md,
         "pose_from" -> transition.pose_from,
-        "pose_to" -> transition.pose_to)
+        "pose_to" -> transition.pose_to,
+        "youtube_url" -> transition.youtube_url)
 
     val id = sql.executeInsert(scalar[Long].single)
 
@@ -118,15 +119,16 @@ class PosesAndTransitionsRepo @Inject()(db:AcroDb) extends PosesAndTransitionsTr
 
   def insertTransitionVersion(transition: Transition): Unit = db.withConnection { implicit conn =>
     val sql = SQL(
-      """INSERT INTO TransitionsVersions(transition_id,name,updated_ts,created_by,description_md,pose_from,pose_to)
-        |VALUES ({transition_id},{name},NOW(),{created_by},{description_md},{pose_from},{pose_to})""".stripMargin)
+      """INSERT INTO TransitionsVersions(transition_id,name,updated_ts,created_by,description_md,pose_from,pose_to,youtube_url)
+        |VALUES ({transition_id},{name},NOW(),{created_by},{description_md},{pose_from},{pose_to},{youtube_url})""".stripMargin)
       .on(
         "transition_id" -> transition.transition_id.get,
         "name" -> transition.name,
         "created_by" -> transition.created_by,
         "description_md" -> transition.description_md,
         "pose_from" -> transition.pose_from,
-        "pose_to" -> transition.pose_to)
+        "pose_to" -> transition.pose_to,
+        "youtube_url" -> transition.youtube_url)
 
     sql.executeInsert()
   }
@@ -139,7 +141,8 @@ class PosesAndTransitionsRepo @Inject()(db:AcroDb) extends PosesAndTransitionsTr
         | created_by = {created_by},
         | description_md = {description_md},
         | pose_to = {pose_to},
-        | pose_from = {pose_from}
+        | pose_from = {pose_from},
+        | youtube_url = {youtube_url}
         |WHERE transition_id = {transition_id}""".stripMargin)
       .on(
         "name" -> transition.name,
@@ -147,7 +150,8 @@ class PosesAndTransitionsRepo @Inject()(db:AcroDb) extends PosesAndTransitionsTr
         "description_md" -> transition.description_md,
         "pose_from" -> transition.pose_from,
         "pose_to" -> transition.pose_to,
-        "transition_id" -> transition.transition_id.get
+        "transition_id" -> transition.transition_id.get,
+        "youtube_url" -> transition.youtube_url
       )
     sql.executeUpdate()
   }

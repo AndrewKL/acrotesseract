@@ -65,13 +65,14 @@ class Transitions @Inject() (posesAndTransitions:PosesAndTransitionsTrait) exten
   }
 }
 
-case class UITransition(name:String,description_md:String,pose_from:Long, pose_to:Long){
+case class UITransition(name:String,description_md:String,pose_from:Long, pose_to:Long,youtube_url:Option[String]){
   def toTransition(createdBy:String) = new Transition(
     Option.empty,
     name,
     createdBy,
     description_md,
     pose_from,
-    pose_to
+    pose_to,
+    if(!youtube_url.isEmpty && youtube_url.get == "")Option.empty else youtube_url  //empty string is as good as empty
   )
 }

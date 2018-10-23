@@ -1,7 +1,7 @@
 @import repo.Transition
 @import repo.Pose
 @import helper._
-
+@import util.YoutubeUrlParser
 @(transition: Transition,fromPose:Pose,toPose:Pose)(implicit request: RequestHeader)
 
 @main_with_navbar("Transition") {
@@ -25,13 +25,13 @@
         </div>
     </nav>
 
-    <div>Name: @transition.name</div>
+    @if(!transition.youtube_url.isEmpty){
+        <iframe width="560" height="315" src="@YoutubeUrlParser.parseUrl(transition.youtube_url.get).embededUrl()"
+        frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+    }
+
     <div>@transition.description_md</div>
 
     <div>From: <a href="@routes.Poses.get(fromPose.pose_id.get)">@fromPose.name</a></div>
     <div>To: <a href="@routes.Poses.get(toPose.pose_id.get)">@toPose.name</a></div>
-    <form action="@routes.Transitions.postDeleteTransition(transition.transition_id.get)" method="post">
-        <input type="submit" value="Delete" class="btn-danger">
-        @CSRF.formField
-    </form>
 }

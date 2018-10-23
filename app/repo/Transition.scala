@@ -1,4 +1,4 @@
 package repo
 
 case class Transition(transition_id:Option[Long],name:String,created_by:String,
-                      description_md:String,pose_from:Long, pose_to:Long)
+                      description_md:String,pose_from:Long, pose_to:Long,youtube_url:Option[String])

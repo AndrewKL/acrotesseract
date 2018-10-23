@@ -16,6 +16,10 @@
             <input type="text" name="description_md" value="@transition.description_md" class="form-control" id="pose-description" placeholder="description">
         </div>
         <div class="form-group">
+            <label for="youtube-url">Youtube Url</label>
+            <input type="text" name="youtube_url" value="@transition.youtube_url.getOrElse("")" class="form-control" id="youtube-url" placeholder="Youtube Url">
+        </div>
+        <div class="form-group">
             <label for="pose-from-id">From Posel</label>
             <input type="text" name="pose_from" value="@transition.pose_from" class="form-control" id="pose-from-id" placeholder="from pose(id)">
         </div>

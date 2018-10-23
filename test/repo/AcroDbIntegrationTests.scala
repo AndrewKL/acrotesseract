@@ -107,7 +107,8 @@ class AcroDbIntegrationTests {
       "createdby",
       "desc",
       pose_id,
-      pose_id)
+      pose_id,
+      Option("https://youtu.be/g8OhDBRwhSw?t=403"))
 
     val id = repo.insertTransition(transition)
 
@@ -155,7 +156,8 @@ class AcroDbIntegrationTests {
       "createdby",
       "desc",
       pose_id,
-      pose_id)
+      pose_id,
+      Option("https://youtu.be/g8OhDBRwhSw?t=403"))
 
     val results = repo.listTransitionsFromPose(pose_id)
     assertNotNull(results)
