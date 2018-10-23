@@ -6,7 +6,7 @@ import play.api.mvc._
 
 class IsAlive extends Controller {
   def isAlive() = Action { implicit request =>
-    Ok("Ok")
+    Ok("Ok").withHeaders(("Cache-Control", "no-cache"))
   }
 
 }

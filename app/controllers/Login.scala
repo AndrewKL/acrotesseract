@@ -17,7 +17,7 @@ class Login @Inject()(val authConfig: GoogleAuthConfig,
     */
   def login = Action { request =>
     val error = request.flash.get("error")
-    Ok(views.html.login(error))
+    Ok(views.html.login(error)).withHeaders(("Cache-Control", "no-cache"))
   }
 
   /*

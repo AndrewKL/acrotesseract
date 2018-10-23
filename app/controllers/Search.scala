@@ -15,11 +15,10 @@ class Search @Inject() (repo:PosesAndTransitionsTrait)
 
 
   def search(searchText:Option[String]) = Action { implicit request =>
-
     Ok(Json.toJson(new SearchResp(
       repo.searchPose(searchText.getOrElse("")),
       repo.searchTransitions(searchText.getOrElse(""))
-    )))
+    ))).withHeaders(("Cache-Control", "no-cache"))
   }
 }
 

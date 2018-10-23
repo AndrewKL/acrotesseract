@@ -11,7 +11,8 @@ class Transitions @Inject() (posesAndTransitions:PosesAndTransitionsTrait) exten
   val transitionForm = Form(CaseClassMapping.mapping[UITransition])
 
   def list = Action { implicit request =>
-    Ok(views.html.transitions_list(posesAndTransitions.listTransitions()))
+
+    Ok(views.html.transitions_list(posesAndTransitions.listTransitions())).withHeaders(("Cache-Control", "no-cache"))
   }
 
   def get(transition_id: Long) = Action { implicit request =>
@@ -43,7 +44,7 @@ class Transitions @Inject() (posesAndTransitions:PosesAndTransitionsTrait) exten
 
   def getEditTransition(transition_id:Long) = Action { implicit request =>
     posesAndTransitions.getTransition(transition_id) match {
-      case Some(transition) => Ok(views.html.transitions_transition_edit(transition))
+      case Some(transition) => Ok(views.html.transitions_transition_edit(transition)).withHeaders(("Cache-Control", "no-cache"))
       case None => NotFound("Not found")
     }
   }

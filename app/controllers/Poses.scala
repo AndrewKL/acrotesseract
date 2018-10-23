@@ -12,7 +12,7 @@ class Poses @Inject() (repo:PosesAndTransitionsTrait)
   val poseForm = Form(CaseClassMapping.mapping[UIPose])
 
   def list = Action { implicit request =>
-    Ok(views.html.poses_list(repo.listPose()))
+    Ok(views.html.poses_list(repo.listPose())).withHeaders(("Cache-Control", "no-cache"))
   }
 
   def get(pose_id:Long) = Action { implicit request =>
@@ -20,7 +20,7 @@ class Poses @Inject() (repo:PosesAndTransitionsTrait)
       case Some(pose) => {
         val transitionsFrom = repo.listTransitionsFromPose(pose.pose_id.get)
         val transitionsTo = repo.listTransitionsToPose(pose.pose_id.get)
-        Ok(views.html.poses_pose(pose,transitionsFrom,transitionsTo))
+        Ok(views.html.poses_pose(pose,transitionsFrom,transitionsTo)).withHeaders(("Cache-Control", "no-cache"))
       }
       case None => NotFound("Not found")
     }
@@ -43,7 +43,7 @@ class Poses @Inject() (repo:PosesAndTransitionsTrait)
 
   def getEditPose(pose_id:Long) = Action { implicit request =>
     repo.getPose(pose_id) match {
-      case Some(pose) => Ok(views.html.poses_pose_add_edit(pose))
+      case Some(pose) => Ok(views.html.poses_pose_add_edit(pose)).withHeaders(("Cache-Control", "no-cache"))
       case None => NotFound("Not found")
     }
   }

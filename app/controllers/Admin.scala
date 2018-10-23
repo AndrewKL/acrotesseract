@@ -20,11 +20,11 @@ class Admin @Inject() (repo:PosesAndTransitionsTrait, authAction: AuthAction[Any
         user.get.asJson,
         isEditor(request),
         config.jdbcString
-      ))
+      )).withHeaders(("Cache-Control", "no-cache"))
     }
   }
 
   def ping = authAction { request: RequestHeader =>
-    Ok("OK")
+    Ok("OK").withHeaders(("Cache-Control", "no-cache"))
   }
 }
