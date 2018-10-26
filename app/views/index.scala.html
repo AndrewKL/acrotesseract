@@ -8,13 +8,19 @@
 
     <div id="search-results" class="search-results"></div>
     <script id="search-template" type="text/x-handlebars-template">
-        <h3><a href="/poses">Poses</a></h3>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light justify-content-between">
+            <a class="navbar-brand" a href="@routes.Poses.list()">Poses</a>
+            <a class="btn btn-outline-info my-2 my-sm-0" href="@routes.Poses.getNewPose()">New</a>
+        </nav>
         <ul class="pose-list">
         {{#each poses}}
         <li><a href="/poses/{{pose_id}}">{{this.name}}</a></li>
         {{/each}}
         </ul>
-        <h3><a href="/transitions">Transitions</a></h3>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light justify-content-between">
+            <a class="navbar-brand" a href="@routes.Transitions.list()">Transitions</a>
+            <a class="btn btn-outline-info my-2 my-sm-0" href="@routes.Transitions.getNewTransition()">New</a>
+        </nav>
         <ul class="transition-list">
         {{#each transitions}}
         <li><a href="/transitions/{{transition_id}}">{{this.name}}</a></li>
