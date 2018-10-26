@@ -1,0 +1,3 @@
+ALTER TABLE Transitions ADD UNIQUE(name);
+
+ALTER TABLE Poses ADD UNIQUE(name);
