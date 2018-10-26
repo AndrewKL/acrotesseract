@@ -172,4 +172,15 @@ class AcroDbIntegrationTests {
 
     println(repo.dumpDb())
   }
+
+  @Ignore
+  @Test
+  def dumpDb_prod(): Unit = {
+    val config = AcroConfig.prod
+    val upw = getAcroTesseractSecret(secretName = config.dbPasswordSecretName,new DefaultAWSCredentialsProviderChain)
+    new AcroDb(jdbc = config.jdbcString,username = upw.username,pw = upw.password)
+    val repo = new PosesAndTransitionsRepo(acrodb)
+
+    println(repo.dumpDb())
+  }
 }
