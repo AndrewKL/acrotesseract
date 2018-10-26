@@ -3,8 +3,18 @@
 @import helper._
 
 @()(implicit request: RequestHeader)
+@scripts = {
+    <script src="/assets/javascripts/searchPosesModal.js"></script>
 
-@main_with_navbar("List Poses") {
+    <script id="pose-search-template" type="text/x-handlebars-template">
+        <ul class="pose-list">
+        {{#each poses}}
+            <li><a class="select-pose-btn btn-outline-success" x-pose-id="{{this.pose_id}}">{{this.name}}</a></li>
+        {{/each}}
+        </ul>
+    </script>
+}
+@main_with_navbar("List Poses",scripts) {
     <h3>New Transition</h3>
     <form action="@routes.Transitions.postNewTransition()" method="post">
         <div class="form-group">
@@ -19,12 +29,55 @@
             <label for="youtube-url">Youtube Url</label>
             <input type="text" name="youtube_url" value="" class="form-control" id="youtube-url" placeholder="Youtube Url">
         </div>
+            <!--search from poses-->
+        <div id="search-from-poses-modal" class="search-poses-modal modal" tabindex="-1" role="dialog" style="display:none;">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Search Poses</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <input class="search-text form-control form-control-sm ml-3 w-75" type="text" placeholder="Search" aria-label="Search">
+
+                        <div id="pose-search-results" class="pose-search-results"></div>
+
+                    </div>
+                    <div class="modal-footer"></div>
+                </div>
+            </div>
+        </div>
+
+
+
         <div class="form-group">
-            <label for="pose-from-id">From Posel</label>
+            <label for="pose-from-id">From Pose<a id="search-from-pose" class="btn btn-outline-info">Search</a></label>
             <input type="text" name="pose_from" value="" class="form-control" id="pose-from-id" placeholder="from pose(id)">
         </div>
+            <!--search to poses-->
+        <div id="search-to-poses-modal" class="search-poses-modal modal" tabindex="-1" role="dialog" style="display:none;">
+            <div class="modal-dialog  modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Search Poses</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <input class="search-text form-control form-control-sm ml-3 w-75" type="text" placeholder="Search" aria-label="Search">
+
+                        <div id="pose-search-results" class="pose-search-results"></div>
+
+                    </div>
+                    <div class="modal-footer"></div>
+                </div>
+            </div>
+        </div>
         <div class="form-group">
-            <label for="pose-to-id">To Posel</label>
+            <label for="pose-to-id">To Pose<a id="search-to-pose" class="btn btn-outline-info">Search</a></label>
             <input type="text" name="pose_to" value="" class="form-control" id="pose-to-id" placeholder="to pose(id)">
         </div>
         @CSRF.formField
