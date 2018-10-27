@@ -3,8 +3,13 @@
 }
 @main_with_navbar("Acro Tesseract",scripts) {
     <!-- Search form -->
-    <i class="fa fa-search" aria-hidden="true"></i>
-    <input id="search-text" class="form-control form-control-sm ml-3 w-75" type="text" placeholder="Search" aria-label="Search">
+    <div class="input-group md-form form-sm form-1 pl-0">
+        <div class="input-group-prepend">
+            <span class="input-group-text purple lighten-3" id="basic-text1"><i class="fa fa-search"
+            aria-hidden="true">Search</i></span>
+        </div>
+        <input id="search-text" class="form-control my-0 py-1" autocomplete="off" type="text" aria-label="Search">
+    </div>
 
     <div id="search-results" class="search-results"></div>
     <script id="search-template" type="text/x-handlebars-template">
