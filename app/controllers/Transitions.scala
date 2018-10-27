@@ -26,9 +26,8 @@ class Transitions @Inject() (posesAndTransitions:PosesAndTransitionsTrait) exten
     }
   }
 
-
-  def getNewTransition() = Action { implicit request =>
-    Ok(views.html.transitions_transition_new())
+  def getNewTransition(from:Option[Long],to:Option[Long]) = Action { implicit request =>
+    Ok(views.html.transitions_transition_new(from,to))
   }
 
   def postNewTransition() = Action { implicit request =>

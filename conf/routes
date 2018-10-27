@@ -21,7 +21,7 @@ POST    /poses/:pose_id/edit        controllers.Poses.postEditPose(pose_id:Long)
 
 # Poses
 GET     /transitions                controllers.Transitions.list()
-GET     /transitions/new            controllers.Transitions.getNewTransition()
+GET     /transitions/new            controllers.Transitions.getNewTransition(from:Option[Long],to:Option[Long])
 POST    /transitions/new            controllers.Transitions.postNewTransition()
 GET     /transitions/:transition_id              controllers.Transitions.get(transition_id:Long)
 POST    /transitions/:transition_id/delete       controllers.Transitions.postDeleteTransition(transition_id:Long)

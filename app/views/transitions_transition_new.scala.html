@@ -2,7 +2,7 @@
 @import repo.Transition
 @import helper._
 
-@()(implicit request: RequestHeader)
+@(from:Option[Long],to:Option[Long])(implicit request: RequestHeader)
 @scripts = {
     <script src="/assets/javascripts/searchPosesModal.js"></script>
 
@@ -54,7 +54,7 @@
 
         <div class="form-group">
             <label for="pose-from-id">From Pose<a id="search-from-pose" class="btn btn-outline-info">Search</a></label>
-            <input type="text" name="pose_from" value="" class="form-control" id="pose-from-id" placeholder="from pose(id)">
+            <input type="text" name="pose_from" value="@from.map(_.toString).getOrElse("")" class="form-control" id="pose-from-id" placeholder="from pose(id)">
         </div>
             <!--search to poses-->
         <div id="search-to-poses-modal" class="search-poses-modal modal" tabindex="-1" role="dialog" style="display:none;">
@@ -78,7 +78,7 @@
         </div>
         <div class="form-group">
             <label for="pose-to-id">To Pose<a id="search-to-pose" class="btn btn-outline-info">Search</a></label>
-            <input type="text" name="pose_to" value="" class="form-control" id="pose-to-id" placeholder="to pose(id)">
+            <input type="text" name="pose_to" value="@to.map(_.toString).getOrElse("")" class="form-control" id="pose-to-id" placeholder="to pose(id)">
         </div>
         @CSRF.formField
         <button type="submit" class="btn btn-primary">Add New Transition</button>
