@@ -1,6 +1,7 @@
 package di
 
 import auth.GoogleAuthConfigUtils
+import com.amazonaws.auth.profile.ProfileCredentialsProvider
 import com.amazonaws.auth.{AWSCredentialsProvider, DefaultAWSCredentialsProviderChain}
 import com.amazonaws.services.secretsmanager.{AWSSecretsManager, AWSSecretsManagerClientBuilder}
 import com.google.inject.{AbstractModule, Provides}
@@ -20,10 +21,19 @@ class AcroDIModule extends AbstractModule {
   }
 
   @Provides @Singleton
-  def config():AcroConfig = AcroConfig.prod
+  def config(environment: play.Environment ):AcroConfig = {
+    if(environment.isDev || environment.isTest){
+      AcroConfig.dev
+    } else {
+      AcroConfig.prod
+    }
+  }
 
   @Provides @Singleton
-  def credProvider(config:AcroConfig):AWSCredentialsProvider = new DefaultAWSCredentialsProviderChain()
+  def credProvider(config:AcroConfig):AWSCredentialsProvider = config.profileCredentialsName match {
+    case Some(profile) => new ProfileCredentialsProvider(profile)
+    case _ =>new DefaultAWSCredentialsProviderChain()
+  }
 
   @Provides @Singleton
   def googleAuthConfig(config:AcroConfig, httpConfiguration: HttpConfiguration,creds:AWSCredentialsProvider):GoogleAuthConfig =

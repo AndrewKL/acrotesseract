@@ -1,4 +1,4 @@
-@(title: String, scripts: Html = Html(""))(content: Html)
+@(title: String, scripts: Html = Html(""), styles: Html = Html(""))(content: Html)
 
 <!DOCTYPE html>
 
@@ -16,6 +16,7 @@
         <link rel="stylesheet" href="/assets/library/bootstrap-4.1.3.min.css">
 
         <link rel="stylesheet" href="/assets/stylesheets/main.css">
+        @styles
 
         <!-- Global site tag (gtag.js) - Google Analytics -->
         <script async src="https://www.googletagmanager.com/gtag/js?id=UA-127156894-1"></script>

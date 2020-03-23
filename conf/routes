@@ -8,7 +8,12 @@ GET     /admin                      controllers.Admin.index
 GET     /admin/ping                 controllers.Admin.ping
 GET     /isalive                    controllers.IsAlive.isAlive
 
+#Search Api
 GET     /search                     controllers.Search.search(searchText:Option[String])
+
+#Graph
+GET     /graph                      controllers.Graph.index(focusPose:Option[Long])
+GET     /graph/data                 controllers.Graph.getData()
 
 # Poses
 GET     /poses                      controllers.Poses.list()
@@ -19,7 +24,7 @@ POST    /poses/:pose_id/delete      controllers.Poses.postDeletePose(pose_id:Lon
 GET     /poses/:pose_id/edit        controllers.Poses.getEditPose(pose_id:Long)
 POST    /poses/:pose_id/edit        controllers.Poses.postEditPose(pose_id:Long)
 
-# Poses
+# Transitions
 GET     /transitions                controllers.Transitions.list()
 GET     /transitions/new            controllers.Transitions.getNewTransition(from:Option[Long],to:Option[Long])
 POST    /transitions/new            controllers.Transitions.postNewTransition()
