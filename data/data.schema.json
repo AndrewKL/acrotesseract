@@ -2,9 +2,12 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://acrotesseract.info/schemas/data.schema.json",
   "title": "Acro Tesseract data",
-  "description": "Poses (graph nodes) and transitions (directed edges). Field names, types and lengths mirror the legacy RDS MySQL tables Poses and Transitions (Flyway migrations V1-V4). Not expressible here, checked separately: pose_id and transition_id are unique, pose and transition names are unique, and pose_from/pose_to refer to an existing pose_id.",
+  "description": "Poses (graph nodes) and transitions (directed edges). Field names, types and lengths mirror the legacy RDS MySQL tables Poses and Transitions (Flyway migrations V1-V4), except that ids are UUIDs instead of int(11) AUTO_INCREMENT. Not expressible here, checked separately: pose_id and transition_id are unique, pose and transition names are unique, and pose_from/pose_to refer to an existing pose_id.",
   "type": "object",
-  "required": ["poses", "transitions"],
+  "required": [
+    "poses",
+    "transitions"
+  ],
   "additionalProperties": false,
   "properties": {
     "$schema": {
@@ -12,33 +15,47 @@
     },
     "poses": {
       "type": "array",
-      "items": { "$ref": "#/$defs/pose" }
+      "items": {
+        "$ref": "#/$defs/pose"
+      }
     },
     "transitions": {
       "type": "array",
-      "items": { "$ref": "#/$defs/transition" }
+      "items": {
+        "$ref": "#/$defs/transition"
+      }
     }
   },
   "$defs": {
     "id": {
-      "description": "MySQL int(11) AUTO_INCREMENT primary key.",
-      "type": "integer",
-      "minimum": 1,
-      "maximum": 2147483647
+      "description": "Primary key: a UUID in canonical lowercase 8-4-4-4-12 hex form (replaces the RDS int(11) AUTO_INCREMENT key).",
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
     },
     "timestamp": {
       "description": "MySQL TIMESTAMP NULL, as an ISO 8601 UTC date-time.",
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "format": "date-time"
     },
     "pose": {
       "description": "A row of the Poses table.",
       "type": "object",
-      "required": ["pose_id", "name"],
+      "required": [
+        "pose_id",
+        "name"
+      ],
       "additionalProperties": false,
       "properties": {
-        "pose_id": { "$ref": "#/$defs/id" },
-        "created_ts": { "$ref": "#/$defs/timestamp" },
+        "pose_id": {
+          "$ref": "#/$defs/id"
+        },
+        "created_ts": {
+          "$ref": "#/$defs/timestamp"
+        },
         "name": {
           "description": "varchar(256) NOT NULL, UNIQUE (V4).",
           "type": "string",
@@ -47,17 +64,26 @@
         },
         "created_by": {
           "description": "varchar(256) NULL.",
-          "type": ["string", "null"],
+          "type": [
+            "string",
+            "null"
+          ],
           "maxLength": 256
         },
         "image_url": {
           "description": "varchar(256) NULL. Externally hosted image shown on the pose page.",
-          "type": ["string", "null"],
+          "type": [
+            "string",
+            "null"
+          ],
           "maxLength": 256
         },
         "description_md": {
           "description": "VARCHAR(10000) utf8 NULL. Markdown.",
-          "type": ["string", "null"],
+          "type": [
+            "string",
+            "null"
+          ],
           "maxLength": 10000
         }
       }
@@ -65,11 +91,20 @@
     "transition": {
       "description": "A row of the Transitions table: a directed edge pose_from -> pose_to. Parallel edges and self-loops are allowed.",
       "type": "object",
-      "required": ["transition_id", "name", "pose_from", "pose_to"],
+      "required": [
+        "transition_id",
+        "name",
+        "pose_from",
+        "pose_to"
+      ],
       "additionalProperties": false,
       "properties": {
-        "transition_id": { "$ref": "#/$defs/id" },
-        "created_ts": { "$ref": "#/$defs/timestamp" },
+        "transition_id": {
+          "$ref": "#/$defs/id"
+        },
+        "created_ts": {
+          "$ref": "#/$defs/timestamp"
+        },
         "name": {
           "description": "varchar(256) NOT NULL, UNIQUE (V4).",
           "type": "string",
@@ -78,25 +113,34 @@
         },
         "created_by": {
           "description": "varchar(256) NULL.",
-          "type": ["string", "null"],
+          "type": [
+            "string",
+            "null"
+          ],
           "maxLength": 256
         },
         "description_md": {
           "description": "VARCHAR(10000) utf8 NULL. Markdown.",
-          "type": ["string", "null"],
+          "type": [
+            "string",
+            "null"
+          ],
           "maxLength": 10000
         },
         "pose_from": {
-          "description": "int(11) NOT NULL, FOREIGN KEY -> Poses.pose_id.",
+          "description": "FOREIGN KEY -> Poses.pose_id (a UUID).",
           "$ref": "#/$defs/id"
         },
         "pose_to": {
-          "description": "int(11) NOT NULL, FOREIGN KEY -> Poses.pose_id.",
+          "description": "FOREIGN KEY -> Poses.pose_id (a UUID).",
           "$ref": "#/$defs/id"
         },
         "youtube_url": {
           "description": "varchar(1024) NULL (V3). Any YouTube watch, youtu.be or embed URL.",
-          "type": ["string", "null"],
+          "type": [
+            "string",
+            "null"
+          ],
           "maxLength": 1024
         }
       }

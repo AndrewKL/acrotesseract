@@ -20,6 +20,13 @@ lazy val api = (project in file("modules/api"))
   .dependsOn(domain)
   .settings(
     commonTest,
+    // Bundle the repo's data/data.json (the static pose and transition data) onto the classpath as data.json.
+    Compile / resourceGenerators += Def.task {
+      val src = (LocalRootProject / baseDirectory).value.getParentFile / "data" / "data.json"
+      val dest = (Compile / resourceManaged).value / "data.json"
+      IO.copyFile(src, dest)
+      Seq(dest)
+    }.taskValue,
     libraryDependencies ++= Seq(
       "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-core" % jsoniterVersion,
       "com.github.plokhotnyuk.jsoniter-scala" %% "jsoniter-scala-macros" % jsoniterVersion % "compile-internal"

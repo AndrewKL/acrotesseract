@@ -1,8 +1,10 @@
 package acrotesseract
 
+import java.util.UUID
+
 /** A pose is a node in the acro graph. */
 final case class Pose(
-    id: Long,
+    id: UUID,
     name: String,
     imageUrl: Option[String],
     descriptionMd: Option[String]
@@ -10,10 +12,10 @@ final case class Pose(
 
 /** A transition is a directed edge from one pose to another. Parallel edges and self-loops are allowed. */
 final case class Transition(
-    id: Long,
+    id: UUID,
     name: String,
     descriptionMd: Option[String],
-    poseFrom: Long,
-    poseTo: Long,
+    poseFrom: UUID,
+    poseTo: UUID,
     youtubeUrl: Option[String]
 )

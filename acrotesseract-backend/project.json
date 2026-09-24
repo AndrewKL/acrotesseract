@@ -8,7 +8,8 @@
       "{projectRoot}/build.sbt",
       "{projectRoot}/project/*.sbt",
       "{projectRoot}/project/build.properties",
-      "{projectRoot}/modules/**/*.scala"
+      "{projectRoot}/modules/**/*.scala",
+      "{workspaceRoot}/data/data.json"
     ]
   },
   "targets": {

@@ -76,7 +76,7 @@ come from memory, not a fresh lookup.
   and the real author is recorded.
 - Every write records a version row atomically with the change. Referential integrity is enforced: a transition's
   poses must exist, and a pose with transitions can't be deleted.
-- Existing URLs such as `/poses/12` and `/transitions/7` keep working after the cutover.
+- Pose and transition ids are UUIDs, so any client can mint an id and ids never collide across environments.
 - HTTPS everywhere. Separate dev and prod environments.
 - Near-zero cost at idle.
 
@@ -101,8 +101,8 @@ flowchart LR
 
 - **A single origin.** CloudFront serves the SPA from S3 and forwards `/api/*` to API Gateway. Everything is on
   the same origin, so the API needs no CORS setup and the browser always sees one domain.
-- **SPA routing.** CloudFront returns `index.html` for unknown paths, so deep links like `/poses/12` load the app.
-  React Router then renders the right page, which keeps old URLs working.
+- **SPA routing.** CloudFront returns `index.html` for unknown paths, so deep links like `/poses/<uuid>` load the
+  app. React Router then renders the right page.
 - **API.** API Gateway **HTTP API** (v2) with a Lambda proxy integration and no API Gateway authorizer. The
   Lambda checks the session cookie itself (see below). Read routes are public.
 - **Backend.** A single Scala Lambda function (a "Lambdalith") with an in-process router. The API is about 15
@@ -125,7 +125,7 @@ sequenceDiagram
     L->>L: Verify ID token (Google JWKS, iss, aud, exp, email_verified)
     L->>D: Get EDITOR#<email>
     L-->>B: Set-Cookie acrotesseract_session (HS256 JWT, 24h)<br/>body { email, name, isEditor }
-    B->>L: PUT /api/poses/12 (cookie sent automatically)
+    B->>L: PUT /api/poses/<uuid> (cookie sent automatically)
     L->>L: Verify session JWT with the cookie secret
     alt is editor
         L->>D: TransactWriteItems (pose + version row)
@@ -192,7 +192,6 @@ protection is on, and the removal policy is `RETAIN`.**
 | Transition | `TRANSITION#<id>` | `META` | `name`, `descriptionMd`, `poseFrom`, `poseTo`, `youtubeUrl?`, `createdBy`, `createdAt`, `updatedBy`, `updatedAt`, `version` | GSI1: `TYPE#TRANSITION` / `<lower(name)>`; GSI2: `FROM#<poseFrom>` / `TRANSITION#<id>`; GSI3: `TO#<poseTo>` / `TRANSITION#<id>` |
 | Transition version | `TRANSITION#<id>` | `VERSION#<version>` | Full snapshot + `op`, `by`, `at` | – |
 | Name guard | `NAME#POSE#<lower(name)>` or `NAME#TRANSITION#<lower(name)>` | `NAME` | `ownerId` | – |
-| Id counter | `COUNTER#POSE` / `COUNTER#TRANSITION` | `COUNTER` | `value` (number) | – |
 | Editor | `EDITOR#<email>` | `EDITOR` | `addedBy`, `addedAt` | – |
 
 **GSIs** (the attribute names are generic so the indexes can be reused):
@@ -203,14 +202,16 @@ protection is on, and the removal policy is `RETAIN`.**
 | GSI2 `byFrom` | `GSI2PK` | `GSI2SK` | ALL | A5 |
 | GSI3 `byTo` | `GSI3PK` | `GSI3SK` | ALL | A6 |
 
-Only `META` items carry GSI attributes, so version, guard, counter, and editor items stay out of the indexes (sparse
+Only `META` items carry GSI attributes, so version, guard, and editor items stay out of the indexes (sparse
 indexes).
 
 ### Design decisions
 
-- **Numeric ids are kept.** New ids come from an atomic `UpdateItem ADD value :1` on the counter item. This keeps
-  the existing `/poses/12` URLs valid after migration. The migration sets each counter to `max(id) + 1`. A ULID
-  would avoid the counter write, but it would break old links and make URLs ugly.
+- **Ids are UUIDs.** Pose and transition ids are canonical lowercase UUIDs (for example
+  `5f9040d6-fdaf-444e-9e3b-83ae4da54843`), generated with `UUID.randomUUID()` on create. There's no counter item and
+  no extra write per create, and ids from different environments or offline tools can't collide. The API rejects
+  anything that isn't a canonical 8-4-4-4-12 UUID with 400. The tradeoff is that the legacy numeric URLs
+  (`/poses/12`) don't carry over. The legacy database is gone, so there are no old links worth preserving.
 - **Every write is one `TransactWriteItems`.** It contains the `META` put/update, the `VERSION#n` put, name-guard
   changes, and `edgeCount` changes. This fixes the current "version row may or may not exist" bug.
 - **Optimistic locking.** A client sends the `version` it last read, and the update is conditioned on
@@ -239,7 +240,7 @@ indexes).
 
 ## API
 
-The API lives under `/api` and is JSON only. Ids are numbers. Every write returns the updated entity, including its
+The API lives under `/api` and is JSON only. Ids are UUID strings. Every write returns the updated entity, including its
 new `version`.
 
 | Method | Path | Auth | Notes |
@@ -478,12 +479,12 @@ origins include `http://localhost:4200`, the same split Olympos uses.
 
 1. **Export.** Read `Poses`, `Transitions`, `PosesVersions`, and `TransitionsVersions` from the prod MySQL schema.
 2. **Transform** each table:
-    - **Poses and transitions:** keep their ids and turn each into a `META` item.
+    - **Poses and transitions:** give each a new UUID (keeping an old-id → UUID map to rewrite `pose_from`/`pose_to`
+      and the version rows) and turn each into a `META` item.
     - **Version rows:** number them `VERSION#1..n` by `updated_ts`. A pose with no version rows (because of the
       `updatePose` bug) gets a synthesized `VERSION#1` from its current row.
     - **`edgeCount`:** compute it from the transitions.
     - **Name guards:** build them, and fail loudly on case-insensitive duplicates.
-    - **Counters:** set each to `max(id) + 1`.
     - **Authors:** keep `created_by = "TODO"` as `"unknown"`.
 3. **Load** with `BatchWriteItem` into the dev table, then verify: counts match, every edge's endpoints exist, and
    graph JSON from the old `/graph/data` equals the new `/api/graph` after normalizing field names.
