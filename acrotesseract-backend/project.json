@@ -1,0 +1,43 @@
+{
+  "name": "acrotesseract-backend",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "tags": ["type:app", "lang:scala"],
+  "namedInputs": {
+    "scala": [
+      "{projectRoot}/build.sbt",
+      "{projectRoot}/project/*.sbt",
+      "{projectRoot}/project/build.properties",
+      "{projectRoot}/modules/**/*.scala"
+    ]
+  },
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": ["scala"],
+      "outputs": ["{projectRoot}/modules/lambda/target/scala-3.9.0/acrotesseract-lambda.jar"],
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "sbt lambda/assembly"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": ["scala"],
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "sbt test"
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "continuous": true,
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "sbt local/run"
+      }
+    }
+  }
+}

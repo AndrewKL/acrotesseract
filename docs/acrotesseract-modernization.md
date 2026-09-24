@@ -269,8 +269,8 @@ The contract lives in **`api/openapi.yaml`**, which is the single source of trut
 
 | Concern | Choice | Why |
 |---|---|---|
-| Language | Scala 3 (LTS line) | Current. Clean enums and ADTs for the domain |
-| Build | sbt 1.x + `sbt-assembly` → one fat JAR | CDK points at the JAR path |
+| Language | Scala 3.9 (current LTS) | Current. Clean enums and ADTs for the domain |
+| Build | sbt 1.12 + `sbt-assembly` → one fat JAR | CDK points at the JAR path |
 | Runtime | Lambda `java21`, arm64, 1024 MB | arm64 is cheaper. The memory size also buys CPU for startup |
 | Cold start | **Lambda SnapStart** on a published version/alias | Makes JVM cold starts sub-second |
 | AWS SDK | AWS SDK for Java **v2** DynamoDB client + `UrlConnectionHttpClient` | Smaller and faster to start than the Netty/Apache clients |
@@ -315,7 +315,7 @@ We can move to either one later without changing the API, if SnapStart latency i
 
 | Concern | Choice |
 |---|---|
-| Tooling | React 19 + Vite + TypeScript, generated with `@nx/react` (same generator defaults as Olympos: Vite bundler, CSS) |
+| Tooling | React 19 + Vite + TypeScript + Vitest, CSS modules (the same shape as `olympos-frontend`) |
 | Routing | React Router. The paths mirror today's: `/`, `/poses`, `/poses/:id`, `/poses/:id/edit`, `/poses/new`, `/transitions/...`, `/graph?focusPose=` |
 | Data fetching | TanStack Query (caching, invalidation after writes), a typed fetch client from the OpenAPI types |
 | Auth | GIS script + `LoginModal` + `google.d.ts`, ported from Olympos. An `AuthProvider` calls `/api/me` on load and exposes `user`/`isEditor`. No token is kept in JS |
@@ -415,20 +415,23 @@ acrotesseract/
   docs/
 ```
 
-**Nx targets.** Nx has no first-class sbt plugin, so the backend's `project.json` wraps sbt in `nx:run-commands`
-targets. Declaring `inputs` and `outputs` lets Nx cache them:
+**Nx targets.** Every target is an explicit `nx:run-commands` target in the project's `project.json`, so the
+workspace needs only the `nx` package. There are no Nx plugins to keep in version lockstep. Olympos, by contrast,
+uses `@nx/vite` inference and the `@nx-iac/aws-cdk` executors. The sbt targets declare `inputs` and `outputs` so
+Nx can cache them.
 
 | Project | Target | Runs | Depends on |
 |---|---|---|---|
-| `acrotesseract-backend` | `build` | `sbt lambda/assembly` → `target/.../acrotesseract-lambda.jar` (inputs: `**/*.scala`, `build.sbt`, `project/*`) | – |
-| `acrotesseract-backend` | `test` | `sbt test` (DynamoDB Local via Testcontainers) | – |
+| `acrotesseract-backend` | `build` | `sbt lambda/assembly` → `modules/lambda/target/scala-3.9.0/acrotesseract-lambda.jar` | – |
+| `acrotesseract-backend` | `test` | `sbt test` | – |
 | `acrotesseract-backend` | `serve` | `sbt local/run` on `:8080` with `STAGE=local` | – |
-| `acrotesseract-frontend` | `build` / `dev` / `test` | Vite build / dev server on `:4200` (proxy `/api` → `:8080`) / Vitest | – |
-| `acrotesseract-cdk` | `package` | `@nx-iac/aws-cdk:synthesize` | `acrotesseract-backend:build`, `acrotesseract-frontend:build` |
-| `acrotesseract-cdk` | `deploy` | `@nx-iac/aws-cdk:deploy`, with a `quick` configuration (hotswap, no rollback) for fast Lambda code pushes, as in Olympos | `package` |
+| `acrotesseract-frontend` | `build` / `dev` / `test` / `typecheck` | Vite build / dev server on `:4200` (proxy `/api` → `:8080`) / Vitest / `tsc` | – |
+| `acrotesseract-cdk` | `test` / `typecheck` | Jest template tests / `tsc` | – |
+| `acrotesseract-cdk` | `package` | `cdk synth` | `acrotesseract-backend:build`, `acrotesseract-frontend:build` |
+| `acrotesseract-cdk` | `diff` / `deploy` / `destroy` | `cdk … --app cdk.out --profile acrotesseract-prod`. `deploy -c quick` adds `--hotswap-fallback --no-rollback`, as in Olympos | `package` |
 
 Olympos needs `container-build` and `container-push` targets (Podman → ECR) plus a separate `deploy-all`.
-Acrotesseract doesn't: CDK uploads the JAR and the `dist/` folder as assets, so `npx nx deploy acrotesseract-cdk`
+Acro Tesseract doesn't: CDK uploads the JAR and the `dist/` folder as assets, so `npx nx deploy acrotesseract-cdk`
 is the whole deploy.
 
 **Local development.** Run `docker compose up` (DynamoDB Local), then `npx nx serve acrotesseract-backend` and

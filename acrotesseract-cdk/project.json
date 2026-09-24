@@ -1,0 +1,64 @@
+{
+  "name": "acrotesseract-cdk",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "acrotesseract-cdk/cdk",
+  "projectType": "application",
+  "tags": ["type:infra", "lang:ts"],
+  "implicitDependencies": ["acrotesseract-backend", "acrotesseract-frontend"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "tsc -p tsconfig.json"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "jest"
+      }
+    },
+    "package": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["acrotesseract-backend:build", "acrotesseract-frontend:build"],
+      "outputs": ["{projectRoot}/cdk.out"],
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "cdk synth --quiet --profile acrotesseract-prod"
+      }
+    },
+    "diff": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["package"],
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "cdk diff --app cdk.out --all --profile acrotesseract-prod"
+      }
+    },
+    "deploy": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["package"],
+      "defaultConfiguration": "normal",
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "cdk deploy --app cdk.out --all --profile acrotesseract-prod"
+      },
+      "configurations": {
+        "normal": {},
+        "quick": {
+          "command": "cdk deploy --app cdk.out --all --profile acrotesseract-prod --hotswap-fallback --no-rollback --require-approval never"
+        }
+      }
+    },
+    "destroy": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["package"],
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "cdk destroy --app cdk.out --all --profile acrotesseract-prod"
+      }
+    }
+  }
+}
