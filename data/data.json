@@ -1,0 +1,435 @@
+{
+  "$schema": "./data.schema.json",
+  "poses": [
+    {
+      "pose_id": 1,
+      "created_ts": "2018-10-01T00:00:00Z",
+      "name": "Ground",
+      "created_by": "Andrew",
+      "image_url": null,
+      "description_md": "Starting position. The base lies on their back with legs raised, and the flyer stands at the base's feet, ready to mount."
+    },
+    {
+      "pose_id": 2,
+      "created_ts": "2018-10-01T00:00:00Z",
+      "name": "Front Bird",
+      "created_by": "Andrew",
+      "image_url": null,
+      "description_md": "The base's feet are in the flyer's hip creases. The flyer lies face down, horizontal and engaged, holding the base's hands or with arms out."
+    },
+    {
+      "pose_id": 3,
+      "created_ts": "2018-10-01T00:00:00Z",
+      "name": "Star",
+      "created_by": "Andrew",
+      "image_url": null,
+      "description_md": "Inversion. The base's feet are on the flyer's shoulders and the pair are hand to hand. The flyer inverts with legs split wide into a star."
+    },
+    {
+      "pose_id": 4,
+      "created_ts": "2018-10-01T00:00:00Z",
+      "name": "Free Shoulder Stand",
+      "created_by": "Andrew",
+      "image_url": null,
+      "description_md": "Inversion. The flyer's shoulders rest on the base's feet with no hands, and the flyer balances in a straight vertical line."
+    },
+    {
+      "pose_id": 5,
+      "created_ts": "2018-10-01T00:00:00Z",
+      "name": "Reverse Bird",
+      "created_by": "Andrew",
+      "image_url": null,
+      "description_md": "Also called back bird. The base's feet support the flyer's lower back, and the flyer faces up in an open back bend."
+    },
+    {
+      "pose_id": 6,
+      "created_ts": "2018-10-01T00:00:00Z",
+      "name": "Side Star",
+      "created_by": "Andrew",
+      "image_url": null,
+      "description_md": "The flyer is sideways over the base, with one of the base's feet at the flyer's hip and one hand holding the flyer's hand. The flyer's body and legs open into a star."
+    },
+    {
+      "pose_id": 7,
+      "created_ts": "2018-10-01T00:00:00Z",
+      "name": "Reverse Star",
+      "created_by": "Andrew",
+      "image_url": null,
+      "description_md": "Star with the flyer facing away from the base. The flyer is inverted with legs split wide."
+    },
+    {
+      "pose_id": 8,
+      "created_ts": "2018-10-01T00:00:00Z",
+      "name": "Throne",
+      "created_by": "Andrew",
+      "image_url": null,
+      "description_md": "The flyer sits upright on the base's feet as if on a chair, shins held by the base for balance."
+    },
+    {
+      "pose_id": 9,
+      "created_ts": "2018-10-01T00:00:00Z",
+      "name": "Folded Leaf",
+      "created_by": "Andrew",
+      "image_url": null,
+      "description_md": "Therapeutic pose. From front bird, the flyer folds forward over the base's feet and lets the arms and head hang."
+    },
+    {
+      "pose_id": 10,
+      "created_ts": "2018-10-01T00:00:00Z",
+      "name": "Straddle Bat",
+      "created_by": "Andrew",
+      "image_url": null,
+      "description_md": "Therapeutic inversion. The flyer hangs upside down in a wide straddle, supported by the base's feet, hands free."
+    },
+    {
+      "pose_id": 11,
+      "created_ts": "2018-10-01T00:00:00Z",
+      "name": "Whale",
+      "created_by": "Andrew",
+      "image_url": null,
+      "description_md": "Therapeutic back bend. The base's feet are on the flyer's upper back and the base holds the flyer's ankles, while the flyer arches face up."
+    },
+    {
+      "pose_id": 12,
+      "created_ts": "2018-10-01T00:00:00Z",
+      "name": "Candlestick",
+      "created_by": "Andrew",
+      "image_url": null,
+      "description_md": "Inversion. The flyer's shoulders rest in the base's straight arms, and the flyer's body is a vertical line with legs together."
+    },
+    {
+      "pose_id": 13,
+      "created_ts": "2018-10-01T00:00:00Z",
+      "name": "Hand to Hand",
+      "created_by": "Andrew",
+      "image_url": null,
+      "description_md": "Inversion. The flyer handstands in the base's hands, and the base's arms are locked straight."
+    },
+    {
+      "pose_id": 14,
+      "created_ts": "2018-10-01T00:00:00Z",
+      "name": "Foot to Hand",
+      "created_by": "Andrew",
+      "image_url": null,
+      "description_md": "The flyer stands on the base's hands, and the base's arms are locked straight up."
+    },
+    {
+      "pose_id": 15,
+      "created_ts": "2018-10-01T00:00:00Z",
+      "name": "Vishnu's Couch",
+      "created_by": "Andrew",
+      "image_url": null,
+      "description_md": "The flyer lies on their side along the base's feet, propping the head on one hand."
+    },
+    {
+      "pose_id": 16,
+      "created_ts": "2018-10-01T00:00:00Z",
+      "name": "Pigeon",
+      "created_by": "Andrew",
+      "image_url": null,
+      "description_md": "Reverse bird variation. The flyer bends one knee and reaches back to hold that foot."
+    }
+  ],
+  "transitions": [
+    {
+      "transition_id": 1,
+      "created_ts": "2018-10-01T00:00:00Z",
+      "name": "Ground to Front Bird",
+      "created_by": "Andrew",
+      "description_md": "Standing entry. The base sets their feet in the flyer's hip creases, takes the flyer's hands and lifts them into front bird.",
+      "pose_from": 1,
+      "pose_to": 2,
+      "youtube_url": "https://youtu.be/g8OhDBRwhSw?t=403"
+    },
+    {
+      "transition_id": 2,
+      "created_ts": "2018-10-01T00:00:00Z",
+      "name": "Front Bird to Free Shoulder Stand",
+      "created_by": "Andrew",
+      "description_md": "The flyer folds forward and places their shoulders on the base's feet, then lifts the legs into a free shoulder stand.",
+      "pose_from": 2,
+      "pose_to": 4,
+      "youtube_url": null
+    },
+    {
+      "transition_id": 3,
+      "created_ts": "2018-10-01T00:00:00Z",
+      "name": "Corkscrew Up",
+      "created_by": "Andrew",
+      "description_md": "The flyer spirals down from front bird onto the base's feet at the shoulders and inverts into star.",
+      "pose_from": 2,
+      "pose_to": 3,
+      "youtube_url": null
+    },
+    {
+      "transition_id": 4,
+      "created_ts": "2018-10-01T00:00:00Z",
+      "name": "Corkscrew Down",
+      "created_by": "Andrew",
+      "description_md": "Reverse of corkscrew up. The flyer spirals out of star and back into front bird.",
+      "pose_from": 3,
+      "pose_to": 2,
+      "youtube_url": null
+    },
+    {
+      "transition_id": 5,
+      "created_ts": "2018-10-01T00:00:00Z",
+      "name": "Front Bird to Ground",
+      "created_by": "Andrew",
+      "description_md": "Dismount. The base bends their legs to lower the flyer until the flyer's feet reach the floor.",
+      "pose_from": 2,
+      "pose_to": 1,
+      "youtube_url": null
+    },
+    {
+      "transition_id": 6,
+      "created_ts": "2018-10-01T00:00:00Z",
+      "name": "Front Bird to Throne",
+      "created_by": "Andrew",
+      "description_md": "The base bends their knees to bring the flyer upright, and the flyer sits on the base's feet.",
+      "pose_from": 2,
+      "pose_to": 8,
+      "youtube_url": null
+    },
+    {
+      "transition_id": 7,
+      "created_ts": "2018-10-01T00:00:00Z",
+      "name": "Throne to Front Bird",
+      "created_by": "Andrew",
+      "description_md": "The flyer leans forward and the base walks their feet back into the flyer's hip creases.",
+      "pose_from": 8,
+      "pose_to": 2,
+      "youtube_url": null
+    },
+    {
+      "transition_id": 8,
+      "created_ts": "2018-10-01T00:00:00Z",
+      "name": "Throne to Reverse Bird",
+      "created_by": "Andrew",
+      "description_md": "The flyer turns to face away, and the base moves their feet to the flyer's lower back.",
+      "pose_from": 8,
+      "pose_to": 5,
+      "youtube_url": null
+    },
+    {
+      "transition_id": 9,
+      "created_ts": "2018-10-01T00:00:00Z",
+      "name": "Reverse Bird to Throne",
+      "created_by": "Andrew",
+      "description_md": "The flyer sits up, and the base moves their feet under the flyer's sitting bones.",
+      "pose_from": 5,
+      "pose_to": 8,
+      "youtube_url": null
+    },
+    {
+      "transition_id": 10,
+      "created_ts": "2018-10-01T00:00:00Z",
+      "name": "Reverse Bird to Ground",
+      "created_by": "Andrew",
+      "description_md": "Dismount. The base lowers the flyer until the flyer's feet reach the floor behind the base's head.",
+      "pose_from": 5,
+      "pose_to": 1,
+      "youtube_url": null
+    },
+    {
+      "transition_id": 11,
+      "created_ts": "2018-10-01T00:00:00Z",
+      "name": "Reverse Bird to Pigeon",
+      "created_by": "Andrew",
+      "description_md": "The flyer bends one knee and reaches back to hold the foot.",
+      "pose_from": 5,
+      "pose_to": 16,
+      "youtube_url": null
+    },
+    {
+      "transition_id": 12,
+      "created_ts": "2018-10-01T00:00:00Z",
+      "name": "Pigeon to Reverse Bird",
+      "created_by": "Andrew",
+      "description_md": "The flyer releases the foot and extends back into reverse bird.",
+      "pose_from": 16,
+      "pose_to": 5,
+      "youtube_url": null
+    },
+    {
+      "transition_id": 13,
+      "created_ts": "2018-10-01T00:00:00Z",
+      "name": "Front Bird to Folded Leaf",
+      "created_by": "Andrew",
+      "description_md": "The pair let go of hands, and the flyer folds forward over the base's feet to relax.",
+      "pose_from": 2,
+      "pose_to": 9,
+      "youtube_url": null
+    },
+    {
+      "transition_id": 14,
+      "created_ts": "2018-10-01T00:00:00Z",
+      "name": "Folded Leaf to Front Bird",
+      "created_by": "Andrew",
+      "description_md": "The pair take hands again, and the flyer lifts back up to horizontal.",
+      "pose_from": 9,
+      "pose_to": 2,
+      "youtube_url": null
+    },
+    {
+      "transition_id": 15,
+      "created_ts": "2018-10-01T00:00:00Z",
+      "name": "Folded Leaf to Straddle Bat",
+      "created_by": "Andrew",
+      "description_md": "The base walks their feet toward the flyer's inner thighs, and the flyer opens into a hanging straddle.",
+      "pose_from": 9,
+      "pose_to": 10,
+      "youtube_url": null
+    },
+    {
+      "transition_id": 16,
+      "created_ts": "2018-10-01T00:00:00Z",
+      "name": "Straddle Bat to Ground",
+      "created_by": "Andrew",
+      "description_md": "Dismount. The flyer places their hands on the floor, and the base lowers them into a roll-out.",
+      "pose_from": 10,
+      "pose_to": 1,
+      "youtube_url": null
+    },
+    {
+      "transition_id": 17,
+      "created_ts": "2018-10-01T00:00:00Z",
+      "name": "Star to Side Star",
+      "created_by": "Andrew",
+      "description_md": "The flyer rotates a quarter turn onto their side while the base keeps one hand and one foot connected.",
+      "pose_from": 3,
+      "pose_to": 6,
+      "youtube_url": null
+    },
+    {
+      "transition_id": 18,
+      "created_ts": "2018-10-01T00:00:00Z",
+      "name": "Side Star to Star",
+      "created_by": "Andrew",
+      "description_md": "The flyer rotates back to face the base and inverts into star.",
+      "pose_from": 6,
+      "pose_to": 3,
+      "youtube_url": null
+    },
+    {
+      "transition_id": 19,
+      "created_ts": "2018-10-01T00:00:00Z",
+      "name": "Star to Reverse Star",
+      "created_by": "Andrew",
+      "description_md": "The flyer turns to face away from the base while staying inverted.",
+      "pose_from": 3,
+      "pose_to": 7,
+      "youtube_url": null
+    },
+    {
+      "transition_id": 20,
+      "created_ts": "2018-10-01T00:00:00Z",
+      "name": "Side Star to Vishnu's Couch",
+      "created_by": "Andrew",
+      "description_md": "The flyer lowers onto their side along the base's feet and props the head on one hand.",
+      "pose_from": 6,
+      "pose_to": 15,
+      "youtube_url": null
+    },
+    {
+      "transition_id": 21,
+      "created_ts": "2018-10-01T00:00:00Z",
+      "name": "Ground to Whale",
+      "created_by": "Andrew",
+      "description_md": "The flyer stands at the base's head, and the base places their feet on the flyer's upper back and holds the flyer's ankles before lifting.",
+      "pose_from": 1,
+      "pose_to": 11,
+      "youtube_url": null
+    },
+    {
+      "transition_id": 22,
+      "created_ts": "2018-10-01T00:00:00Z",
+      "name": "Ground to Candlestick",
+      "created_by": "Andrew",
+      "description_md": "The flyer stands at the base's head, places their shoulders in the base's hands and lifts their legs up.",
+      "pose_from": 1,
+      "pose_to": 12,
+      "youtube_url": null
+    },
+    {
+      "transition_id": 23,
+      "created_ts": "2018-10-01T00:00:00Z",
+      "name": "Candlestick to Hand to Hand",
+      "created_by": "Andrew",
+      "description_md": "The flyer moves their hands into the base's hands and presses up into a handstand.",
+      "pose_from": 12,
+      "pose_to": 13,
+      "youtube_url": null
+    },
+    {
+      "transition_id": 24,
+      "created_ts": "2018-10-01T00:00:00Z",
+      "name": "Ground to Foot to Hand",
+      "created_by": "Andrew",
+      "description_md": "The flyer stands at the base's head and steps into the base's hands, and the base presses the flyer up to straight arms.",
+      "pose_from": 1,
+      "pose_to": 14,
+      "youtube_url": null
+    },
+    {
+      "transition_id": 25,
+      "created_ts": "2018-10-01T00:00:00Z",
+      "name": "Free Shoulder Stand to Front Bird",
+      "created_by": "Andrew",
+      "description_md": "The flyer lowers their legs and rolls forward off the shoulders, and the base catches the hips back in front bird.",
+      "pose_from": 4,
+      "pose_to": 2,
+      "youtube_url": null
+    },
+    {
+      "transition_id": 26,
+      "created_ts": "2018-10-01T00:00:00Z",
+      "name": "Reverse Star to Star",
+      "created_by": "Andrew",
+      "description_md": "The flyer turns back to face the base while staying inverted.",
+      "pose_from": 7,
+      "pose_to": 3,
+      "youtube_url": null
+    },
+    {
+      "transition_id": 27,
+      "created_ts": "2018-10-01T00:00:00Z",
+      "name": "Whale to Ground",
+      "created_by": "Andrew",
+      "description_md": "Dismount. The base lowers their legs and the flyer's feet come down to the floor behind the base's head.",
+      "pose_from": 11,
+      "pose_to": 1,
+      "youtube_url": null
+    },
+    {
+      "transition_id": 28,
+      "created_ts": "2018-10-01T00:00:00Z",
+      "name": "Hand to Hand to Candlestick",
+      "created_by": "Andrew",
+      "description_md": "The flyer lowers their shoulders into the base's hands and brings the legs together.",
+      "pose_from": 13,
+      "pose_to": 12,
+      "youtube_url": null
+    },
+    {
+      "transition_id": 29,
+      "created_ts": "2018-10-01T00:00:00Z",
+      "name": "Foot to Hand to Ground",
+      "created_by": "Andrew",
+      "description_md": "Dismount. The base bends their arms and the flyer steps down to the floor.",
+      "pose_from": 14,
+      "pose_to": 1,
+      "youtube_url": null
+    },
+    {
+      "transition_id": 30,
+      "created_ts": "2018-10-01T00:00:00Z",
+      "name": "Vishnu's Couch to Side Star",
+      "created_by": "Andrew",
+      "description_md": "The flyer takes the base's hand again and opens back up into side star.",
+      "pose_from": 15,
+      "pose_to": 6,
+      "youtube_url": null
+    }
+  ]
+}
