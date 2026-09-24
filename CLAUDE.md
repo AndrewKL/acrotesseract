@@ -16,12 +16,20 @@ TypeScript CDK with a stages file, and Google sign-in exchanged for an HttpOnly 
 
 ```
 acrotesseract-frontend/   React 19 + Vite + Vitest. Nx targets: dev, build, test, typecheck, preview
+  src/app/app.tsx         route table (paths mirror the legacy Play app; see docs/frontend-pages-plan.md)
+  src/api/                typed fetch client + TanStack Query hooks for /api/poses and /api/transitions
+  src/pages/              Home (client-side search), pose/transition list + detail, Graph (lazy-loaded Cytoscape)
+  src/components/         AppShell (header/nav), shared UI (Markdown, YouTubeEmbed, lists), PoseGraph
+  src/test/               renderApp() + stubApi() helpers and fixtures for page tests
 acrotesseract-backend/    sbt build, Scala 3.9. Nx targets wrap sbt: build (lambda/assembly), test, serve
   modules/domain/         Pose, Transition (no AWS deps)
-  modules/api/            Router, handlers, jsoniter-scala codecs; transport-neutral Request/Response
+  modules/api/            Router, handlers, jsoniter-scala codecs; transport-neutral Request/Response.
+                          Serves poses/transitions from data/data.json (bundled as classpath data.json)
+                          via StaticData + InMemoryRepository until the DynamoDB store lands
   modules/lambda/         acrotesseract.Handler (APIGatewayV2HTTPEvent) -> acrotesseract-lambda.jar
   modules/local/          JDK HttpServer on :8080 wrapping the api module
 acrotesseract-cdk/        CDK app: cdk/AcroTesseractCdkApp.ts, cdk/AcroTesseractStages.ts, cdk/stacks/*
+data/                     data.json (placeholder poses + transitions, RDS column names) + data.schema.json
 docs/                     design docs
 ```
 

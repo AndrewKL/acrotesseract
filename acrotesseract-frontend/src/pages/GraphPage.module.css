@@ -1,0 +1,22 @@
+.page {
+  position: relative;
+  height: 100%;
+}
+
+.overlay {
+  position: absolute;
+  top: 12px;
+  left: 16px;
+  z-index: 1;
+  max-width: calc(100% - 32px);
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.overlay strong {
+  color: var(--fg);
+}

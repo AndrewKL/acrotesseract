@@ -1,0 +1,14 @@
+.intro {
+  margin-bottom: 24px;
+}
+
+.intro h1 {
+  margin: 0 0 8px;
+  font-size: 2rem;
+}
+
+.intro p {
+  margin: 0 0 8px;
+  color: var(--muted);
+  max-width: 70ch;
+}

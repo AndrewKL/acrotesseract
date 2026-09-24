@@ -22,6 +22,8 @@ export default defineConfig({
     outDir: './dist',
     emptyOutDir: true,
     reportCompressedSize: true,
+    // The lazily loaded graph chunk is ~520 kB, almost all of it Cytoscape.
+    chunkSizeWarningLimit: 600,
   },
   test: {
     globals: true,
