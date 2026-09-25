@@ -18,6 +18,8 @@ const prod: AcroTesseractStage = {
   accountId: '640110193230',
   region: 'us-west-2',
   writesEnabled: false,
+  // Registered at GoDaddy; its nameservers point at this Route 53 zone (created with the CLI, not CDK).
+  domain: { domainName: 'acrotesseract.com', hostedZoneId: 'Z101167449K0416WE8MW' },
 };
 
 export const acroTesseractStages: AcroTesseractStage[] = [prod];

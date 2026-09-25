@@ -39,13 +39,28 @@ export class WebStack extends Stack {
       autoDeleteObjects: true,
     });
 
-    // Serve index.html for client-side routes (/poses/12) without masking API 404s,
-    // which a distribution-wide error response would do.
+    // Serve index.html for client-side routes (/poses/<id>) without masking API 404s, which a distribution-wide
+    // error response would do. With a custom domain, also send www.<domain> to the bare domain so there's one URL.
+    const apex = props.domain?.domainName;
+    const wwwRedirect = apex
+      ? `
+  var host = request.headers.host ? request.headers.host.value : '';
+  if (host === 'www.${apex}') {
+    var qs = Object.keys(request.querystring).map(function (k) {
+      return k + '=' + request.querystring[k].value;
+    }).join('&');
+    return {
+      statusCode: 301,
+      statusDescription: 'Moved Permanently',
+      headers: { location: { value: 'https://${apex}' + request.uri + (qs ? '?' + qs : '') } },
+    };
+  }`
+      : '';
     const spaRewrite = new cloudfront.Function(this, 'SpaRewriteFunction', {
       runtime: cloudfront.FunctionRuntime.JS_2_0,
       code: cloudfront.FunctionCode.fromInline(`
 function handler(event) {
-  var request = event.request;
+  var request = event.request;${wwwRedirect}
   if (!request.uri.includes('.')) {
     request.uri = '/index.html';
   }
@@ -98,8 +113,11 @@ function handler(event) {
       const target = route53.RecordTarget.fromAlias(
         new route53targets.CloudFrontTarget(this.distribution),
       );
+      // IPv4 and IPv6 aliases for the bare domain and www (www is redirected to the bare domain above).
       new route53.ARecord(this, 'ApexRecord', { zone, target });
+      new route53.AaaaRecord(this, 'ApexAaaaRecord', { zone, target });
       new route53.ARecord(this, 'WwwRecord', { zone, recordName: 'www', target });
+      new route53.AaaaRecord(this, 'WwwAaaaRecord', { zone, recordName: 'www', target });
     }
 
     new CfnOutput(this, 'SiteUrl', {
