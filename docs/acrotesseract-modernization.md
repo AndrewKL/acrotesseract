@@ -1,6 +1,6 @@
 # Acro Tesseract Modernization
 
-*Design doc. Status: draft, as of 2026-09-24.*
+*Design doc. Status: in progress; the read path is live with static data, as of 2026-09-24.*
 
 ## Summary
 
@@ -25,6 +25,25 @@ March 2020. Every layer is past end of life, and the build depends on Bintray, w
 small: poses as nodes, transitions as directed edges between them, and a version history for each. That makes a
 rewrite cheaper than a four-major-version Play upgrade. It is also a chance to fix the data-integrity and
 authorization bugs listed below.
+
+## Progress
+
+The rebuild lives on the `modernization` branch. The legacy Play app stays on `master`. The branch started with no
+shared history, so there's no `legacy/` folder.
+
+| Area | Status |
+|---|---|
+| Nx workspace, sbt project, CDK app, onboarding README, `CLAUDE.md` | Done |
+| AWS account | `acro-tesseract-prod` (`640110193230`, `us-west-2`), CDK-bootstrapped in `us-west-2` |
+| Deployed stacks | Storage, API, cert (`us-east-1`) and web stacks for `prod` |
+| Domain | **https://acrotesseract.com**: registered at GoDaddy, DNS in Route 53 zone `Z101167449K0416WE8MW`, ACM certificate for the bare domain and `www`, `www` → bare-domain 301 redirect, IPv4 + IPv6 |
+| Data | `data/data.json`: 16 placeholder L-basing poses and 30 transitions, with UUID ids and legacy RDS column names, seeded into DynamoDB. See [Data source](#data-source) |
+| DynamoDB | `acrotesseract-poses-prod` and `acrotesseract-transitions-prod` (see [Data model](#data-model-dynamodb)), seeded with `npx nx seed acrotesseract-backend` |
+| Read API | `GET /api/health`, `/api/poses`, `/api/poses/{id}`, `/api/transitions`, `/api/transitions/{id}`, served from DynamoDB |
+| Write API | `POST`/`PUT` for poses and transitions, with validation, optimistic locking, unique names and pose-existence checks. Tested against DynamoDB Local. **Disabled in prod (403)** until sign-in exists |
+| React read pages | Home with search, pose and transition lists and detail pages, graph with focus, and a 404 page. See [docs/frontend-pages-plan.md](frontend-pages-plan.md) |
+| Google sign-in, delete, version history, edit forms, admin | Not started (phase 2) |
+| CI, alarms, OpenAPI spec | Not started |
 
 ## Background: the current system
 
@@ -77,6 +96,8 @@ come from memory, not a fresh lookup.
 - Every write records a version row atomically with the change. Referential integrity is enforced: a transition's
   poses must exist, and a pose with transitions can't be deleted.
 - Pose and transition ids are UUIDs, so any client can mint an id and ids never collide across environments.
+- The legacy URLs don't need to keep working. The legacy database is gone (see [Data source](#data-source)), so
+  there are no old links worth preserving.
 - HTTPS everywhere. Separate dev and prod environments.
 - Near-zero cost at idle.
 
@@ -90,11 +111,11 @@ come from memory, not a fresh lookup.
 
 ```mermaid
 flowchart LR
-    U[Browser<br/>React SPA] --> CF[CloudFront<br/>acrotesseract.info]
+    U[Browser<br/>React SPA] --> CF[CloudFront<br/>acrotesseract.com]
     CF -->|/*| S3[(S3<br/>static web build)]
     CF -->|/api/*| API[API Gateway<br/>HTTP API]
     API --> L[Lambda<br/>Scala 3, Java 21, arm64]
-    L --> DDB[(DynamoDB<br/>single table)]
+    L --> DDB[(DynamoDB<br/>poses + transitions tables)]
     L --> SSM[SSM Parameter Store<br/>cookie secret]
     U -->|ID token| G[Google Identity<br/>Services]
 ```
@@ -107,7 +128,7 @@ flowchart LR
   Lambda checks the session cookie itself (see below). Read routes are public.
 - **Backend.** A single Scala Lambda function (a "Lambdalith") with an in-process router. The API is about 15
   routes over 2 entities. One function means one cold-start pool, one artifact, and simpler CDK.
-- **Data.** A single DynamoDB table (on-demand billing) with 3 GSIs. See [Data model](#data-model-dynamodb).
+- **Data.** Two DynamoDB tables (poses, transitions; on-demand billing). See [Data model](#data-model-dynamodb).
 
 ### Sign-in and authorization
 
@@ -163,47 +184,51 @@ sequenceDiagram
 
 ## Data model (DynamoDB)
 
+**Two tables**, one per entity. This replaced an earlier single-table design, because two plain tables are easier to
+read, seed and inspect in the console, and at this scale the single table's advantages don't matter. The schema is
+defined in `acrotesseract-cdk/cdk/stacks/StorageStack.ts` and mirrored in `DynamoDbTables` (store module) for
+DynamoDB Local. Both tables are on-demand, with **point-in-time recovery, deletion protection and
+`RemovalPolicy.RETAIN`**.
+
+### `acrotesseract-poses-<stage>`
+
+| Attribute | Type | Notes |
+|---|---|---|
+| `poseId` | S (**partition key**) | UUID |
+| `name`, `nameLower` | S | `nameLower` backs the unique-name check |
+| `imageUrl`, `descriptionMd` | S, optional | Left off the item when empty |
+| `version` | N | 1 on create, +1 on every update |
+| `createdAt`, `updatedAt` | S | ISO-8601 instants |
+
+| GSI | Keys | Projection | Used for |
+|---|---|---|---|
+| `byName` | `nameLower` | KEYS_ONLY | Is this name taken? (create and rename) |
+
+### `acrotesseract-transitions-<stage>`
+
+| Attribute | Type | Notes |
+|---|---|---|
+| `transitionId` | S (**partition key**) | UUID |
+| `name`, `nameLower` | S | |
+| `poseFrom`, `poseTo` | S | Pose UUIDs; a self-loop has both equal |
+| `descriptionMd`, `youtubeUrl` | S, optional | |
+| `version`, `createdAt`, `updatedAt` | N, S, S | As for poses |
+
+| GSI | Keys | Projection | Used for |
+|---|---|---|---|
+| `byName` | `nameLower` | KEYS_ONLY | Unique-name check |
+| `byPoseFrom` | `poseFrom` / `nameLower` | ALL | Transitions leaving a pose, sorted by name |
+| `byPoseTo` | `poseTo` / `nameLower` | ALL | Transitions arriving at a pose, sorted by name |
+
 ### Access patterns
 
-| # | Access pattern | Served by |
-|---|---|---|
-| A1 | Get a pose by id | `GetItem` PK=`POSE#<id>`, SK=`META` |
-| A2 | Get a transition by id | `GetItem` PK=`TRANSITION#<id>`, SK=`META` |
-| A3 | List all poses, sorted by name | `Query` GSI1 PK=`TYPE#POSE` |
-| A4 | List all transitions, sorted by name | `Query` GSI1 PK=`TYPE#TRANSITION` |
-| A5 | Transitions **from** a pose | `Query` GSI2 PK=`FROM#<poseId>` |
-| A6 | Transitions **to** a pose | `Query` GSI3 PK=`TO#<poseId>` |
-| A7 | Whole graph (all nodes + edges) | A3 + A4 (GSI1 projects only the graph fields) |
-| A8 | Unique names | Name-guard items written in the same transaction |
-| A9 | Version history of a pose or transition | `Query` PK=`POSE#<id>`, SK `begins_with VERSION#` |
-| A10 | Is this user an editor? | `GetItem` PK=`EDITOR#<email>`, SK=`EDITOR` |
-| A11 | Search by name | Client-side over the A7 payload (see below) |
-| A12 | Counts for the admin page | A3/A4 with `Select=COUNT` |
-
-### Table: `AcroTesseract`
-
-Key attributes: `PK` (string), `SK` (string). Billing: on-demand. **Point-in-time recovery is on, deletion
-protection is on, and the removal policy is `RETAIN`.**
-
-| Item | PK | SK | Other attributes | GSI keys |
-|---|---|---|---|---|
-| Pose | `POSE#<id>` | `META` | `name`, `imageUrl?`, `descriptionMd?`, `createdBy`, `createdAt`, `updatedBy`, `updatedAt`, `version`, `edgeCount` | GSI1: `TYPE#POSE` / `<lower(name)>` |
-| Pose version | `POSE#<id>` | `VERSION#<version, zero-padded to 6>` | Full snapshot + `op` (`create`/`update`/`delete`), `by`, `at` | – |
-| Transition | `TRANSITION#<id>` | `META` | `name`, `descriptionMd`, `poseFrom`, `poseTo`, `youtubeUrl?`, `createdBy`, `createdAt`, `updatedBy`, `updatedAt`, `version` | GSI1: `TYPE#TRANSITION` / `<lower(name)>`; GSI2: `FROM#<poseFrom>` / `TRANSITION#<id>`; GSI3: `TO#<poseTo>` / `TRANSITION#<id>` |
-| Transition version | `TRANSITION#<id>` | `VERSION#<version>` | Full snapshot + `op`, `by`, `at` | – |
-| Name guard | `NAME#POSE#<lower(name)>` or `NAME#TRANSITION#<lower(name)>` | `NAME` | `ownerId` | – |
-| Editor | `EDITOR#<email>` | `EDITOR` | `addedBy`, `addedAt` | – |
-
-**GSIs** (the attribute names are generic so the indexes can be reused):
-
-| Index | PK attr | SK attr | Projection | Used by |
-|---|---|---|---|---|
-| GSI1 `byType` | `GSI1PK` | `GSI1SK` | INCLUDE `name`, `poseFrom`, `poseTo`, `imageUrl` | A3, A4, A7, A12 |
-| GSI2 `byFrom` | `GSI2PK` | `GSI2SK` | ALL | A5 |
-| GSI3 `byTo` | `GSI3PK` | `GSI3SK` | ALL | A6 |
-
-Only `META` items carry GSI attributes, so version, guard, and editor items stay out of the indexes (sparse
-indexes).
+| Pattern | How |
+|---|---|
+| Get a pose / transition | `GetItem` (strongly consistent) |
+| List all poses / transitions | `Scan` (paginated), sorted by name in the Lambda. Fine for hundreds of items; revisit past a few thousand |
+| Transitions from / to a pose | `Query` on `byPoseFrom` / `byPoseTo` |
+| Is a name taken? | `Query` on `byName` |
+| Search | Client-side over the lists (see below) |
 
 ### Design decisions
 
@@ -212,56 +237,62 @@ indexes).
   no extra write per create, and ids from different environments or offline tools can't collide. The API rejects
   anything that isn't a canonical 8-4-4-4-12 UUID with 400. The tradeoff is that the legacy numeric URLs
   (`/poses/12`) don't carry over. The legacy database is gone, so there are no old links worth preserving.
-- **Every write is one `TransactWriteItems`.** It contains the `META` put/update, the `VERSION#n` put, name-guard
-  changes, and `edgeCount` changes. This fixes the current "version row may or may not exist" bug.
-- **Optimistic locking.** A client sends the `version` it last read, and the update is conditioned on
-  `version = :expected`. A conflict returns **409** and the UI offers to reload. That replaces the current
-  last-writer-wins behavior.
-- **Unique names.** A create puts `NAME#…` with `attribute_not_exists(PK)`. A rename deletes the old guard and puts
-  the new one in the same transaction. A violation returns 409 with a clear message.
-- **Referential integrity without foreign keys.**
-  - **Creating a transition** adds 1 to `edgeCount` on both endpoint poses, conditioned on
-    `attribute_exists(PK)`. That guarantees both poses exist.
-  - **Deleting a transition** subtracts 1 from `edgeCount` on both endpoint poses.
-  - **Editing a transition's endpoints** moves the counts from the old poses to the new ones.
-  - **Deleting a pose** is conditioned on `edgeCount = 0`. It fails with a readable 409 ("delete or re-point its
-    N transitions first") instead of a constraint error.
-  - **Self-loop:** when `poseFrom == poseTo`, a transaction can't touch the same item twice, so the code does a
-    single `ADD edgeCount :2`.
-- **History outlives deletes.** A delete writes a final `VERSION#n` with `op=delete` and removes only the `META`
-  item and its name guard, so a deleted entity's history can still be read and restored.
-- **Search runs client-side.** The graph payload (A7) is every name and every edge. It is a few KB for hundreds of
-  items, and the SPA already loads it. Substring search over it in the browser is instant, needs no search index,
-  and replaces the `LIKE` query. If the item count grows past about 10k, revisit with a server-side index.
-- **One partition for `TYPE#…`.** GSI1 puts every pose under a single partition key. At this scale (well below
-  1,000 items and a handful of writes a day), that is far below the partition limits.
-- **Markdown** is stored raw in `descriptionMd`. It is rendered in the browser with `react-markdown` and
-  sanitization, not rendered or stored as HTML on the server.
+- **Optimistic locking.** Every update sends the `version` it last read. The repository checks it and writes with
+  `ConditionExpression: version = :expected`, so a stale update returns **409** instead of silently overwriting.
+- **Unique names (case-insensitive)** are checked with a `byName` query before writing. It isn't transactional:
+  two editors creating the same name at the same moment could both succeed, and GSIs are eventually consistent
+  (usually under a second). That's accepted while there are only a couple of editors. If it ever matters, add
+  name-guard items written in the same transaction.
+- **Referential integrity.** A transition is written in a `TransactWriteItems` together with a `ConditionCheck`
+  (`attribute_exists(poseId)`) on each endpoint pose, so it can never point at a missing pose (400, "To pose … does
+  not exist"). A self-loop checks its pose once, because a transaction can't touch the same item twice.
+- **Not built yet:**
+  - **Delete.** A pose delete should be refused while `byPoseFrom` or `byPoseTo` still returns transitions.
+  - **Version history.** It will need either a history table, or `VERSION#n` items keyed by id + version.
+- **Search runs client-side.** The lists are a few KB for hundreds of items, and the SPA already loads them.
+  Substring search in the browser is instant and needs no index. Revisit past about 10k items.
+- **Markdown** is stored raw in `descriptionMd` and rendered in the browser with `react-markdown` and sanitization.
+- **The legacy single table** `acrotesseract-prod` (from the first CDK deploy) was taken out of the stack but kept,
+  because of its retain policy and deletion protection. It's empty and unused. Delete it by hand once no longer
+  wanted.
 
 ## API
 
-The API lives under `/api` and is JSON only. Ids are UUID strings. Every write returns the updated entity, including its
-new `version`.
+The API lives under `/api` and is JSON only.
 
-| Method | Path | Auth | Notes |
-|---|---|---|---|
-| GET | `/api/graph` | public | `{ poses: [{id, name, imageUrl}], transitions: [{id, name, from, to}] }`. Also powers search. Cached by CloudFront for about 60s |
-| GET | `/api/poses` | public | A3 |
-| GET | `/api/poses/{id}` | public | Pose + `transitionsFrom` + `transitionsTo` (A1, A5, A6 in parallel) |
-| GET | `/api/poses/{id}/versions` | public | A9 |
-| POST | `/api/poses` | editor | Create |
-| PUT | `/api/poses/{id}` | editor | Body includes `version` |
-| DELETE | `/api/poses/{id}?version=n` | editor | 409 if `edgeCount > 0` |
-| GET | `/api/transitions` | public | A4 |
-| GET | `/api/transitions/{id}` | public | Transition + both endpoint poses |
-| GET | `/api/transitions/{id}/versions` | public | |
-| POST / PUT / DELETE | `/api/transitions[/{id}]` | editor | Same pattern as poses |
-| POST | `/api/auth/google` | public | Body `{ credential }` (Google ID token). Sets the session cookie and returns `{ email, name, isEditor }` |
-| POST | `/api/auth/logout` | public | Clears the session cookie |
-| GET | `/api/me` | signed in | `{ email, name, isEditor }`, or 401 |
-| GET | `/api/admin/stats` | editor | Counts |
+- **Ids** are canonical UUID strings. Anything else gets 400.
+- **Field names** are camelCase, and optional fields with no value are left out rather than sent as `null`.
+- **Errors** are `{"error": "..."}` with the status code.
+- **Writes** need `Content-Type: application/json` (415 otherwise; it also blocks form-post CSRF) and return the
+  entity, including its new `version`. Validation limits match the legacy columns: name 1–256, imageUrl ≤256
+  (http/https), descriptionMd ≤10000, youtubeUrl ≤1024 (YouTube hosts only).
+- **Writes are off on deployed stages** (`writesEnabled: false` in `AcroTesseractStages.ts`, which sets
+  `WRITES_ENABLED`) and return 403 until Google sign-in exists. Otherwise anyone could edit. They're on for
+  `nx serve`.
 
-The contract lives in **`api/openapi.yaml`**, which is the single source of truth:
+| Method | Path | Auth | Status | Notes |
+|---|---|---|---|---|
+| GET | `/api/health` | public | **Live** | `{ status, stage }` |
+| GET | `/api/poses` | public | **Live** (DynamoDB) | Sorted by name |
+| GET | `/api/poses/{id}` | public | **Live** (DynamoDB) | `{ pose, transitionsFrom, transitionsTo }`; both lists are always present, possibly empty |
+| GET | `/api/transitions` | public | **Live** (DynamoDB) | Sorted by name |
+| GET | `/api/transitions/{id}` | public | **Live** (DynamoDB) | `{ transition, poseFrom, poseTo }` with both poses in full |
+| GET | `/api/graph` | public | Planned | `{ poses: [{id, name, imageUrl}], transitions: [{id, name, from, to}] }`, cached by CloudFront for about 60s. Until it exists, the frontend uses the two list endpoints |
+| POST | `/api/poses` | editor | **Built**; disabled in prod | Body `{ name, imageUrl?, descriptionMd? }`. 201 + `Location`. 409 on a duplicate name |
+| PUT | `/api/poses/{id}` | editor | **Built**; disabled in prod | Body adds `version` (required). 409 if stale or the name is taken, 404 if missing |
+| POST | `/api/transitions` | editor | **Built**; disabled in prod | Body `{ name, poseFrom, poseTo, descriptionMd?, youtubeUrl? }`. 400 if a pose doesn't exist or the URL isn't YouTube |
+| PUT | `/api/transitions/{id}` | editor | **Built**; disabled in prod | Body adds `version` |
+| GET | `/api/poses/{id}/versions` | public | Planned | Version history |
+| GET | `/api/transitions/{id}/versions` | public | Planned | |
+| DELETE | `/api/poses/{id}`, `/api/transitions/{id}` | editor | Planned | A pose delete is refused while it has transitions |
+| POST | `/api/auth/google` | public | Planned | Body `{ credential }` (Google ID token). Sets the session cookie and returns `{ email, name, isEditor }` |
+| POST | `/api/auth/logout` | public | Planned | Clears the session cookie |
+| GET | `/api/me` | signed in | Planned | `{ email, name, isEditor }`, or 401 |
+| GET | `/api/admin/stats` | editor | Planned | Counts |
+
+The plan is for the contract to live in **`api/openapi.yaml`** as the single source of truth. That file doesn't exist
+yet; for now the TypeScript types in `acrotesseract-frontend/src/api/types.ts` are hand-written to match the Scala
+codecs. Once the spec exists:
 
 - The frontend generates its TypeScript types from it with `openapi-typescript`.
 - The Scala backend has a contract test that checks its JSON codecs against the spec's examples.
@@ -318,11 +349,12 @@ We can move to either one later without changing the API, if SnapStart latency i
 |---|---|
 | Tooling | React 19 + Vite + TypeScript + Vitest, CSS modules (the same shape as `olympos-frontend`) |
 | Routing | React Router. The paths mirror today's: `/`, `/poses`, `/poses/:id`, `/poses/:id/edit`, `/poses/new`, `/transitions/...`, `/graph?focusPose=` |
-| Data fetching | TanStack Query (caching, invalidation after writes), a typed fetch client from the OpenAPI types |
+| Data fetching | TanStack Query (caching, invalidation after writes) and a typed fetch client. The types are hand-written for now and will be generated from OpenAPI later |
 | Auth | GIS script + `LoginModal` + `google.d.ts`, ported from Olympos. An `AuthProvider` calls `/api/me` on load and exposes `user`/`isEditor`. No token is kept in JS |
-| UI | A small component library (for example Mantine or MUI) or Tailwind. This replaces Bootstrap 4 and jQuery |
-| Markdown | `react-markdown` + `remark-gfm` (as in Olympos) + `rehype-sanitize`. The editor has a preview tab |
-| Video | The YouTube embed URL is derived client-side, replacing `YoutubeUrlParser` |
+| UI | Hand-written CSS modules with CSS-variable tokens for light and dark themes, and no component library. This replaces Bootstrap 4 and jQuery |
+| Markdown | `react-markdown` + `remark-gfm` (as in Olympos) + `rehype-sanitize`. The editor (phase 2) gets a preview tab |
+| Video | The YouTube embed URL is derived client-side (`src/lib/youtube.ts`, a port of `YoutubeUrlParser`) and embedded from `youtube-nocookie.com` |
+| Pages | See [docs/frontend-pages-plan.md](frontend-pages-plan.md) for how the legacy pages map to routes. The read-only pages (phase 1) are built and deployed |
 | Tests | Vitest + React Testing Library. Playwright smoke tests run against a deployed dev stage |
 
 ### Graph visualization
@@ -333,15 +365,15 @@ Cytoscape instance through a `ref` and `useEffect`. It doesn't use `react-cytosc
 It keeps the current behavior: pose nodes with labels, directed edges with arrowheads, force-directed Cola layout,
 and clicking a node opens the pose page. It also fixes the current gaps:
 
-- **Focus.** `/graph?focusPose=12` centers and zooms on that node. It highlights the node, its in- and out-edges,
-  and its neighbors, and dims the rest. The pose page's "Graph" link uses this.
-- **Performance.** The layout runs once on load, and again on `free` (drag end) instead of on every `drag` event.
-  Positions are cached in `sessionStorage`, so navigating back doesn't re-layout.
-- **Edges.** Hovering an edge shows the transition name, and clicking it opens `/transitions/:id`. Parallel edges
-  use `curve-style: bezier` so they don't overlap.
-- **Search integration.** The search box filters and highlights matching nodes live, using the same `/api/graph`
-  payload.
-- **Theming.** Colors come from CSS variables, so the graph follows the light and dark themes.
+- **Focus (built).** `/graph?focusPose=<uuid>` zooms to fit that pose and its neighbors. It highlights the pose, its
+  in- and out-edges, and its neighbors, and dims the rest. The pose page's "View in graph" link uses this.
+- **Performance (built).** The layout runs once on load, and again on `dragfree` (drag end) instead of on every
+  `drag` event. The graph page is lazy-loaded, so Cytoscape (about 520 kB) isn't in the main bundle.
+- **Edges (built).** Hovering an edge shows the transition name, and clicking it opens `/transitions/:id`. Parallel
+  edges use `curve-style: bezier` so they don't overlap.
+- **Theming (built).** Colors come from CSS variables, so the graph follows the light and dark themes.
+- **Not yet built:** caching positions in `sessionStorage`, and a search box on the graph page that highlights
+  matching nodes. For now, search lives on the home page.
 
 ## Infrastructure (AWS CDK)
 
@@ -360,9 +392,9 @@ frontend, and TypeScript is CDK's first-class language. There are no official Sc
 
 | Stack | Resources |
 |---|---|
-| `acrotesseract-storage-stack-<stage>` | DynamoDB table `acrotesseract-<stage>` + 3 GSIs, `PAY_PER_REQUEST`, PITR, deletion protection, `RemovalPolicy.RETAIN` (the same billing and retention as Olympos's users table). Exports the table |
-| `acrotesseract-api-stack-<stage>` | Lambda (arm64, `java21`, SnapStart, alias `live`; asset = the JAR built by `acrotesseract-backend:build`), HTTP API, `table.grantReadWriteData(fn)`, read access to `/acrotesseract/<stage>/*` in SSM, log group with retention, alarms (5xx rate, p95 latency, throttles) |
-| `acrotesseract-web-stack-<stage>` | S3 bucket (private, Origin Access Control), CloudFront (S3 default behavior; `/api/*` → HTTP API, caching disabled except `/api/graph`; cookies forwarded to `/api/*` only), SPA fallback, `BucketDeployment` of the frontend's `dist/`, Route 53 alias record |
+| `acrotesseract-storage-stack-<stage>` | DynamoDB tables `acrotesseract-poses-<stage>` (GSI `byName`) and `acrotesseract-transitions-<stage>` (GSIs `byName`, `byPoseFrom`, `byPoseTo`); `PAY_PER_REQUEST`, PITR, deletion protection, `RemovalPolicy.RETAIN` (the same billing and retention as Olympos's users table) |
+| `acrotesseract-api-stack-<stage>` | Lambda (arm64, `java21`, SnapStart, alias `live`; asset = the JAR built by `acrotesseract-backend:build`), HTTP API, `grantReadWriteData` on both tables, env `POSES_TABLE` / `TRANSITIONS_TABLE` / `WRITES_ENABLED`, read access to `/acrotesseract/<stage>/*` in SSM, log group with one-month retention. Alarms (5xx rate, p95 latency, throttles) are planned |
+| `acrotesseract-web-stack-<stage>` | S3 bucket (private, Origin Access Control), CloudFront (S3 default behavior; `/api/*` → HTTP API with caching disabled and all viewer headers except `Host` forwarded), a viewer-request CloudFront Function that rewrites extension-less paths to `/index.html` (so API 404s aren't masked), `BucketDeployment` of the frontend's `dist/`, and Route 53 alias records when the stage has a domain |
 | `acrotesseract-cert-stack-<stage>` | ACM certificate in **us-east-1** (CloudFront requires it), DNS-validated against the hosted zone the same way Olympos's `ECSStack` does. Cross-region reference to the web stack |
 
 There's no VPC stack. Lambda talks to DynamoDB and SSM over public AWS endpoints, so we avoid the NAT Gateway cost
@@ -391,13 +423,15 @@ the projects as top-level folders with a `project.json` each.
 
 ```
 acrotesseract/
-  package.json              Nx + CDK + React devDependencies (one version line: all @nx/* pinned to the same Nx release)
-  nx.json                   plugins: @nx/vite, @nx/js/typescript; targetDefaults with caching
+  package.json              Nx + CDK + React dependencies (only the `nx` package; no Nx plugins)
+  nx.json                   targetDefaults with caching; no plugins
   tsconfig.base.json
   CLAUDE.md                 project guide for Claude Code (commands, architecture, conventions), as in Olympos
-  aws-sso.sh                SSO login + credential export helper (from Olympos)
+  data/
+    data.json               placeholder poses + transitions (legacy RDS column names, UUID ids)
+    data.schema.json        JSON Schema for data.json
   api/
-    openapi.yaml            API contract (source of truth)
+    openapi.yaml            API contract (planned)
   acrotesseract-frontend/   React + Vite + TS (@nx/vite targets: dev, build, test, typecheck)
   acrotesseract-backend/    sbt multi-module Scala project (see above) + project.json
   acrotesseract-cdk/        CDK TypeScript app
@@ -407,13 +441,12 @@ acrotesseract/
     cdk/stacks/{Storage,Api,Web,Cert}Stack.ts + *.spec.ts
     project.json
   tools/
-    migrate-rds-to-ddb/     one-off migration (Scala, reuses the backend's store module)
-  docker-compose.yml        DynamoDB Local for dev + tests (runs under Podman as in Olympos, or Docker)
-  .github/workflows/
+    seed-ddb/               loads data.json into DynamoDB (planned; reuses the backend's store module)
+  docker-compose.yml        DynamoDB Local for dev + tests (planned)
+  .github/workflows/        (planned)
     ci.yml                  PR: nx affected -t lint test build, cdk synth + diff
     deploy.yml              main → prod deploy (manual approval)
-  legacy/                   current Play app, moved here until cutover, then deleted
-  docs/
+  docs/                     this design doc + frontend-pages-plan.md
 ```
 
 **Nx targets.** Every target is an explicit `nx:run-commands` target in the project's `project.json`, so the
@@ -425,7 +458,8 @@ Nx can cache them.
 |---|---|---|---|
 | `acrotesseract-backend` | `build` | `sbt lambda/assembly` → `modules/lambda/target/scala-3.9.0/acrotesseract-lambda.jar` | – |
 | `acrotesseract-backend` | `test` | `sbt test` | – |
-| `acrotesseract-backend` | `serve` | `sbt local/run` on `:8080` with `STAGE=local` | – |
+| `acrotesseract-backend` | `serve` | `sbt local/run` on `:8080` with `STAGE=local` (in-memory `data.json`); `-c dynamodb` uses DynamoDB Local on `:8000` | – |
+| `acrotesseract-backend` | `seed` | Loads `data.json` into the prod tables (`-c local`: DynamoDB Local, creating the tables) | – |
 | `acrotesseract-frontend` | `build` / `dev` / `test` / `typecheck` | Vite build / dev server on `:4200` (proxy `/api` → `:8080`) / Vitest / `tsc` | – |
 | `acrotesseract-cdk` | `test` / `typecheck` | Jest template tests / `tsc` | – |
 | `acrotesseract-cdk` | `package` | `cdk synth` | `acrotesseract-backend:build`, `acrotesseract-frontend:build` |
@@ -475,36 +509,57 @@ origins include `http://localhost:4200`, the same split Olympos uses.
 - **No CI.** Olympos's `nx.json` references `.github/workflows/ci.yml`, but the file doesn't exist. Acro Tesseract
   ships CI in phase 0.
 
-## Data migration and cutover
+## Data source
 
-1. **Export.** Read `Poses`, `Transitions`, `PosesVersions`, and `TransitionsVersions` from the prod MySQL schema.
-2. **Transform** each table:
-    - **Poses and transitions:** give each a new UUID (keeping an old-id → UUID map to rewrite `pose_from`/`pose_to`
-      and the version rows) and turn each into a `META` item.
-    - **Version rows:** number them `VERSION#1..n` by `updated_ts`. A pose with no version rows (because of the
-      `updatePose` bug) gets a synthesized `VERSION#1` from its current row.
-    - **`edgeCount`:** compute it from the transitions.
-    - **Name guards:** build them, and fail loudly on case-insensitive duplicates.
-    - **Authors:** keep `created_by = "TODO"` as `"unknown"`.
-3. **Load** with `BatchWriteItem` into the dev table, then verify: counts match, every edge's endpoints exist, and
-   graph JSON from the old `/graph/data` equals the new `/api/graph` after normalizing field names.
-4. **Cut over.**
-    - Announce an edit freeze and run the migration against prod.
-    - Point DNS (`www.acrotesseract.info`) to the new CloudFront distribution.
-    - Keep EB and RDS running read-only for 2 weeks, then snapshot RDS and tear both down.
-5. **Rollback.** Until teardown, switching DNS back to EB is the rollback. Edits made in the new system during that
-   window would need to be replayed by hand.
+**The legacy data is gone.** The legacy RDS host (`acrotesseract-db.cgccqt70jhl5.us-west-2.rds.amazonaws.com`) no
+longer resolves in DNS. Neither known AWS account (`377848413746`, `153828470603`) has an RDS instance or an Acro
+Tesseract snapshot. The old standalone AWS account behind the Elastic Beanstalk app may still have a final snapshot.
+If one turns up, restore it and run the migration below.
+
+**Until then, the catalog is seeded from `data/data.json`:**
+
+- **Contents:** 16 L-basing poses (Ground is the starting pose) and 30 basic transitions. Every pose can be reached
+  from Ground, and every pose has a way out.
+- **Format:** the field names match the legacy `Poses` / `Transitions` columns, but ids are UUIDs.
+  `data/data.schema.json` describes the format. The backend's `StaticData` loader also checks the rules JSON Schema
+  can't express: unique ids and names, and transitions that point at real poses.
+- **Check before trusting it:** the descriptions are placeholders written from general knowledge.
+- **Validate after editing:** `cd data && npx -p ajv-cli@5 -p ajv-formats ajv validate --spec=draft2020 -c ajv-formats -s data.schema.json -d data.json`
+
+**Pose photos.** `master` still has three photos in `public/acrotesseract/img/poses/`: `bird.jpeg` (Front Bird),
+`free_shoulder_stand.jpg` and `star_side_view.jpg`.
+
+- **Mislabeled:** `free_shoulder_stand.jpg` actually shows Candlestick (shoulders in the base's hands).
+- **A description to fix:** `star_side_view.jpg` shows Star with the legs together, which contradicts the current
+  Star description ("legs split wide").
+- **Unknown rights:** they have no photographer credit. Confirm permission before publishing them.
+- **Not wired in yet:** every `image_url` in `data.json` is `null` for now.
+
+**Loading into DynamoDB (done).** `npx nx seed acrotesseract-backend` (the `seed` main in the backend's `local`
+module) writes every pose and transition from `data.json`, keeping their ids, at version 1. Items that already exist
+are skipped, so it's safe to re-run, and it never overwrites edits. After editing `data.json`, only new ids are
+added. If a legacy RDS snapshot is ever recovered, a variant of the tool would import it instead: map each old
+integer id to a new UUID and rewrite `pose_from`/`pose_to`.
+
+**Domain (done).** The site moved to a new domain, `acrotesseract.com`, instead of reusing `acrotesseract.info`.
+- **Registration and DNS:** the domain is registered at GoDaddy, and its nameservers point at a Route 53 hosted zone
+  in the prod account. The zone was created with the CLI rather than CDK, so a stack teardown can never change the
+  nameservers the registrar points at.
+- **What CDK manages:** the ACM certificate (cert stack in `us-east-1`, DNS-validated), the alias records (A and
+  AAAA for the bare domain and `www`), and a CloudFront Function that 301-redirects `www` to the bare domain.
+- **The old domain:** `acrotesseract.info` isn't used by the new stack.
+- **Cutover:** there was no legacy site left to run alongside it.
 
 ## Delivery plan
 
-| Phase | Scope | Exit criteria |
-|---|---|---|
-| 0. Scaffold | Nx workspace, sbt project + Nx targets, CDK skeleton + stages, CI (affected build/test + synth), `legacy/` move, `CLAUDE.md` | CI green on an empty app; `cdk deploy` to dev creates the table, a hello Lambda, and the site |
-| 1. Read path | Store + read API, React list/detail pages, graph page (parity + focus) | Dev site browsable with migrated dev data |
-| 2. Auth + writes | Google Sign-In (Olympos flow), session cookie, SSM secret, editor check, create/edit/delete with transactions, versions, 409 handling | All write flows work for editors, and non-editors get 403 |
-| 3. Polish | Markdown, history view, search, alarms, Playwright smoke | Feature parity with the legacy app plus the fixed bugs |
-| 4. Migrate + cut over | Migration tool, prod stage, DNS switch | Prod on the new stack; legacy read-only |
-| 5. Decommission | Tear down EB, RDS, CodeBuild, and the old secrets; delete `legacy/` | AWS bill shows no EB or RDS |
+| Phase | Scope | Exit criteria | Status |
+|---|---|---|---|
+| 0. Scaffold | Nx workspace, sbt project + Nx targets, CDK skeleton + stages, CI (affected build/test + synth), `CLAUDE.md` | CI green on an empty app; `cdk deploy` creates the table, a hello Lambda, and the site | Done, except CI |
+| 1. Read path | Read API, React list/detail pages, graph page (parity + focus), DynamoDB store + seed from `data.json` | Site browsable with seeded data from DynamoDB | **Done** |
+| 2. Auth + writes | Google Sign-In (Olympos flow), session cookie, SSM secret, editor check, create/edit/delete with transactions, versions, 409 handling | All write flows work for editors, and non-editors get 403 | Create/update API built (disabled in prod); sign-in, delete, history and forms remaining |
+| 3. Polish | History view, `/api/graph`, alarms, pose photos, Playwright smoke | Feature parity with the legacy app plus the fixed bugs | Markdown and search done early (phase 1) |
+| 4. Domain + cut over | Hosted zone and cert stack, custom domain DNS | Site served on the real domain over HTTPS | **Done**: https://acrotesseract.com |
+| 5. Decommission | Tear down whatever is left of the old EB/CodeBuild setup and secrets | No legacy resources billed | Not started; the RDS database is already gone |
 
 ## Risks
 
@@ -514,17 +569,18 @@ origins include `http://localhost:4200`, the same split Olympos uses.
 | The session cookie expires (24h) mid-edit | The edit form keeps unsaved state in memory. A 401 opens the `LoginModal` and retries the save |
 | The sbt build doesn't fit Nx caching | Explicit `inputs`/`outputs` on the `run-commands` targets. sbt's own incremental compile covers the rest |
 | Single-table design is harder to change later | Access patterns are enumerated above. Generic GSI attribute names leave room for new patterns |
-| Losing data during migration | Dry runs on dev, automated equivalence check, RDS snapshot kept after teardown, PITR on the table |
-| Losing the CloudFront/ACM/DNS config during cutover | Lower the DNS TTL a day ahead. Test the new distribution on `new.acrotesseract.info` first |
+| Losing data once editing starts | PITR and deletion protection on the table, version rows on every write, and `data.json` as a known-good seed |
+| Losing the domain's DNS | The hosted zone lives outside CDK, so no stack operation can delete it or change its nameservers |
 
 ## Open questions
 
 - **Shared code with Olympos:** copy the GIS `LoginModal` and CDK patterns now, or extract them into a shared
   package later if a third project appears?
-- **UI kit:** Mantine, MUI, or Tailwind? This affects how much of the graph page's styling we write by hand.
 - **Editor management:** is it enough to seed `EDITOR#` items from the migration or CLI, or do we want an admin
   screen to add editors?
-- **Images:** keep `imageUrl` pointing at external hosts, or add S3 uploads (presigned PUT) for pose images?
+- **Images:** keep `imageUrl` pointing at external hosts, or add S3 uploads (presigned PUT) for pose images? And can
+  the three legacy photos on `master` be published (see [Data source](#data-source))?
+- **Legacy data:** does the old standalone AWS account still exist, with a final RDS snapshot worth restoring?
 - **Analytics:** drop it, use GA4, or use a privacy-friendly option such as CloudFront logs or Plausible?
 - **Pose deletion:** block it when transitions exist (as proposed), or cascade-delete its transitions after a
   confirm dialog?

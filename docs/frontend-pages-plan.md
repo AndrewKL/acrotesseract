@@ -1,6 +1,6 @@
 # Frontend Pages Plan
 
-*Plan. Status: draft, as of 2026-09-24.*
+*Plan. Status: phase 1 (read-only pages) is built and deployed; phase 2 (editing) is waiting on the write API and sign-in. As of 2026-09-24.*
 
 This plan rebuilds the legacy Play app's pages (Twirl views on `master`) as routes in the React app
 (`acrotesseract-frontend`). The URLs and page structure stay the same. The data comes from the new JSON API, and ids

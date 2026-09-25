@@ -4,6 +4,14 @@ A wiki for acroyoga **poses** (graph nodes) and the **transitions** between them
 This branch is the serverless rebuild described in [docs/acrotesseract-modernization.md](docs/acrotesseract-modernization.md):
 a React SPA and a Scala Lambda API on DynamoDB, deployed with AWS CDK, in one Nx workspace.
 
+**Live:** https://acrotesseract.com (`www.` redirects to it; the CloudFront URL https://d382inb5p2t1tt.cloudfront.net still works)
+
+**Status:** the read-only site is live.
+- **Pages:** browse and search poses and transitions, and explore the graph.
+- **Data:** stored in DynamoDB, seeded from the placeholder [`data/data.json`](data/data.json).
+- **Editing:** the create and update APIs exist but are switched off in prod until Google sign-in lands.
+- **Details:** see the design doc's *Progress* section.
+
 ## Projects
 
 | Project | Path | Stack |
@@ -83,7 +91,10 @@ npx nx serve acrotesseract-backend    # API on http://localhost:8080
 npx nx dev acrotesseract-frontend     # SPA on http://localhost:4200 (proxies /api to :8080)
 ```
 
-Open http://localhost:4200. It should say `API: ok (local)`.
+Open http://localhost:4200. You should see the home page listing 16 poses and 30 transitions. Check
+http://localhost:8080/api/health for `{"status":"ok","stage":"local"}`.
+
+`nx serve acrotesseract-backend` holds sbt's lock. Stop it before running `nx build` or `nx test` on the backend.
 
 ### 6. AWS access (only needed to deploy)
 
@@ -139,11 +150,106 @@ npx nx deploy acrotesseract-cdk            # deploy all stacks
 npx nx deploy acrotesseract-cdk -c quick   # hotswap Lambda code, no rollback
 ```
 
-The first deploy to a new account or region needs a CDK bootstrap:
+The first deploy to a new account or region needs a CDK bootstrap (`npx cdk bootstrap aws://<account>/<region>`).
+`us-west-2` and `us-east-1` (for the cert stack) are already bootstrapped in `640110193230`.
+
+A full deploy (`npx nx deploy acrotesseract-cdk`) takes about 2 minutes when only code changes. Afterwards, check
+https://acrotesseract.com/api/health.
+
+### Domain
+
+`acrotesseract.com` is registered at GoDaddy, but its DNS is in Route 53:
+- **Nameservers:** the GoDaddy nameservers point at hosted zone `Z101167449K0416WE8MW` in the prod account.
+- **Why the zone isn't in CDK:** it was created with the CLI, so a stack teardown can never change the nameservers
+  the registrar points at.
+- **What CDK manages:** the certificate (cert stack, `us-east-1`), and the IPv4 and IPv6 alias records for the bare
+  domain and `www` (web stack).
+- **The `www` redirect:** a CloudFront Function redirects `www.acrotesseract.com` to `acrotesseract.com`.
+- **Where it's configured:** the domain and zone id are in `AcroTesseractStages.ts`.
+
+## What's in the app
+
+### Pages (`acrotesseract-frontend`)
+
+| Route | Page |
+|---|---|
+| `/` | Intro and a search box that filters poses and transitions as you type |
+| `/poses`, `/poses/:id` | Pose list (with transition counts) and pose detail: description, image, transitions from and to |
+| `/transitions`, `/transitions/:id` | Transition list (with from → to) and transition detail: from/to poses, YouTube video, description |
+| `/graph?focusPose=:id` | Cytoscape graph of every pose and transition. Click to open; `focusPose` highlights one pose's neighborhood |
+
+The routes mirror the legacy Play app. [docs/frontend-pages-plan.md](docs/frontend-pages-plan.md) has the mapping and
+the phase 2 (editing) plan.
+
+### API (`acrotesseract-backend`)
+
+Ids are UUIDs. Anything that isn't a canonical UUID gets `400`, and an unknown id gets `404`. Errors come back as
+`{"error": "..."}`.
+
+| Endpoint | Returns |
+|---|---|
+| `GET /api/health` | `{ status, stage }` |
+| `GET /api/poses` | All poses, sorted by name |
+| `GET /api/poses/{id}` | `{ pose, transitionsFrom, transitionsTo }` |
+| `GET /api/transitions` | All transitions, sorted by name |
+| `GET /api/transitions/{id}` | `{ transition, poseFrom, poseTo }` |
+| `POST /api/poses` | Body `{ name, imageUrl?, descriptionMd? }` → `201` with the pose (`version: 1`) and a `Location` header |
+| `PUT /api/poses/{id}` | Body `{ name, imageUrl?, descriptionMd?, version }` → `200` with the pose at `version + 1` |
+| `POST /api/transitions` | Body `{ name, poseFrom, poseTo, descriptionMd?, youtubeUrl? }` → `201` |
+| `PUT /api/transitions/{id}` | Same body plus `version` → `200` |
+
+**How writes behave:**
+- **Content type:** writes need `Content-Type: application/json`; anything else gets `415`.
+- **Errors:**
+  - A stale `version` or a duplicate name (case-insensitive) gets `409`.
+  - A transition whose `poseFrom`/`poseTo` doesn't exist gets `400`.
+  - Invalid fields get `400`.
+- **Where they work:** writes are **disabled on deployed stages** and return `403` until sign-in exists. They work
+  with `nx serve`. To turn them on for a stage, set `writesEnabled` in `acrotesseract-cdk/cdk/AcroTesseractStages.ts`.
 
 ```sh
-npx cdk bootstrap aws://640110193230/us-west-2 aws://640110193230/us-east-1 --profile acrotesseract-prod
+curl -X POST localhost:8080/api/poses -H 'content-type: application/json' -d '{"name":"High Flying Whale"}'
 ```
+
+### Data (`data/`) and DynamoDB
+
+**Tables.** Each deployed stage has two tables: `acrotesseract-poses-<stage>` (key `poseId`) and
+`acrotesseract-transitions-<stage>` (key `transitionId`). The design doc's *Data model* section covers the indexes.
+
+**Seed data.** `data.json` is the seed: 16 placeholder L-basing poses and 30 transitions, using the legacy RDS column
+names (`pose_id`, `pose_from`, …) with UUID ids. The seed tool copies it into the tables, keeping the ids and
+skipping items that already exist, so it's safe to re-run and never overwrites edits:
+
+```sh
+npx nx seed acrotesseract-backend            # prod tables (needs the acrotesseract-prod SSO profile)
+```
+
+**Checks.** The backend checks `data.json` whenever it loads it: unique ids and names, and transitions that point at
+real poses.
+- **Validating edits:** after editing it, check it against `data.schema.json`:
+
+  ```sh
+  cd data && npx -p ajv-cli@5 -p ajv-formats ajv validate --spec=draft2020 -c ajv-formats -s data.schema.json -d data.json
+  ```
+
+- **Rebuilding:** the backend's Nx targets watch `data/data.json`, so the next build or test picks up the change.
+
+**Local DynamoDB.** `nx serve acrotesseract-backend` serves `data.json` from memory by default, and edits are lost
+when it stops. To run against DynamoDB Local instead:
+
+```sh
+podman run -d --rm -p 8000:8000 --name acro-ddb-local docker.io/amazon/dynamodb-local
+npx nx seed acrotesseract-backend -c local     # creates the tables and loads data.json
+npx nx serve acrotesseract-backend -c dynamodb
+```
+
+The backend's DynamoDB tests run the same repository contract against it:
+
+```sh
+cd acrotesseract-backend && DYNAMODB_ENDPOINT=http://localhost:8000 sbt store/test
+```
+
+Without `DYNAMODB_ENDPOINT` those tests are skipped.
 
 ## Stacks
 
@@ -151,11 +257,12 @@ Defined in `acrotesseract-cdk/cdk/AcroTesseractCdkApp.ts`, one set per stage in 
 
 | Stack | Contents |
 |---|---|
-| `acrotesseract-storage-stack-<stage>` | DynamoDB table `acrotesseract-<stage>` (PK/SK + GSI1–3, on-demand, PITR, retained) |
-| `acrotesseract-api-stack-<stage>` | Scala Lambda + `live` alias, HTTP API, table and SSM (`/acrotesseract/<stage>/*`) access |
-| `acrotesseract-web-stack-<stage>` | S3 + CloudFront (SPA + `/api/*`), frontend upload, optional Route 53 records |
+| `acrotesseract-storage-stack-<stage>` | DynamoDB tables `acrotesseract-poses-<stage>` and `acrotesseract-transitions-<stage>` (on-demand, PITR, deletion protection, retained) |
+| `acrotesseract-api-stack-<stage>` | Scala Lambda + `live` alias, HTTP API, read/write on both tables, SSM (`/acrotesseract/<stage>/*`) access, `WRITES_ENABLED` from the stage config |
+| `acrotesseract-web-stack-<stage>` | S3 + CloudFront (SPA + `/api/*`), a CloudFront Function that serves `index.html` for page routes, frontend upload, optional Route 53 records |
 | `acrotesseract-cert-stack-<stage>` | ACM certificate in us-east-1; only when the stage has a `domain` |
 
 ## Legacy app
 
-The original Play 2.6 app is on the `master` branch.
+The original Play 2.6 app is on the `master` branch. Its RDS database no longer exists. `master` still has three pose
+photos in `public/acrotesseract/img/poses/`, which aren't used here yet; see the design doc's *Data source* section.
