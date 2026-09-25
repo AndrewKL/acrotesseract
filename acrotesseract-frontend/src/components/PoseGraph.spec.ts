@@ -9,10 +9,10 @@ describe('toElements', () => {
   it('maps poses to nodes and transitions to directed edges', () => {
     const elements = toElements(
       [
-        { id: 'a', name: 'Ground' },
-        { id: 'b', name: 'Front Bird' },
+        { id: 'a', name: 'Ground', version: 1 },
+        { id: 'b', name: 'Front Bird', version: 1 },
       ],
-      [{ id: 't', name: 'Ground to Front Bird', poseFrom: 'a', poseTo: 'b' }],
+      [{ id: 't', name: 'Ground to Front Bird', poseFrom: 'a', poseTo: 'b', version: 1 }],
     );
     expect(elements).toEqual([
       { group: 'nodes', data: { id: 'pose:a', poseId: 'a', name: 'Ground' } },

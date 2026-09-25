@@ -4,6 +4,8 @@ export interface Pose {
   name: string;
   imageUrl?: string;
   descriptionMd?: string;
+  /** Starts at 1 and goes up on every update. Send it back on PUT (optimistic locking). */
+  version: number;
 }
 
 export interface Transition {
@@ -13,6 +15,7 @@ export interface Transition {
   poseFrom: string;
   poseTo: string;
   youtubeUrl?: string;
+  version: number;
 }
 
 /** GET /api/poses/{id} */

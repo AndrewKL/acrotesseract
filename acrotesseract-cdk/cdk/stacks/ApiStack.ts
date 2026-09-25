@@ -9,7 +9,10 @@ import { Construct } from 'constructs';
 
 export interface ApiStackProps extends StackProps {
   stageName: string;
-  table: dynamodb.ITable;
+  posesTable: dynamodb.ITable;
+  transitionsTable: dynamodb.ITable;
+  /** Allow POST/PUT. Keep off on public stages until Google sign-in exists. */
+  writesEnabled: boolean;
   /** The assembled Scala JAR in the app; a stub asset in tests. */
   lambdaCode: lambda.Code;
 }
@@ -37,12 +40,15 @@ export class ApiStack extends Stack {
       logGroup,
       environment: {
         STAGE: props.stageName,
-        TABLE_NAME: props.table.tableName,
+        POSES_TABLE: props.posesTable.tableName,
+        TRANSITIONS_TABLE: props.transitionsTable.tableName,
+        WRITES_ENABLED: String(props.writesEnabled),
         SSM_PREFIX: `/acrotesseract/${props.stageName}/`,
       },
     });
 
-    props.table.grantReadWriteData(this.apiFunction);
+    props.posesTable.grantReadWriteData(this.apiFunction);
+    props.transitionsTable.grantReadWriteData(this.apiFunction);
 
     // Cookie-signing secret and other SecureStrings, created out of band with `aws ssm put-parameter`.
     this.apiFunction.addToRolePolicy(

@@ -4,14 +4,16 @@ export const ground: Pose = {
   id: '5f9040d6-fdaf-444e-9e3b-83ae4da54843',
   name: 'Ground',
   descriptionMd: 'Starting position.',
+  version: 1,
 };
 export const bird: Pose = {
   id: '11111111-1111-4111-8111-111111111111',
   name: 'Front Bird',
   descriptionMd: 'Horizontal on the **base**’s feet.',
   imageUrl: 'https://example.com/bird.jpg',
+  version: 1,
 };
-export const throne: Pose = { id: '22222222-2222-4222-8222-222222222222', name: 'Throne' };
+export const throne: Pose = { id: '22222222-2222-4222-8222-222222222222', name: 'Throne', version: 1 };
 
 export const groundToBird: Transition = {
   id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
@@ -20,12 +22,14 @@ export const groundToBird: Transition = {
   poseFrom: ground.id,
   poseTo: bird.id,
   youtubeUrl: 'https://youtu.be/g8OhDBRwhSw?t=403',
+  version: 1,
 };
 export const birdToThrone: Transition = {
   id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
   name: 'Front Bird to Throne',
   poseFrom: bird.id,
   poseTo: throne.id,
+  version: 1,
 };
 
 export const poses: Pose[] = [bird, ground, throne];

@@ -18,7 +18,9 @@ function synth() {
   const stack = new ApiStack(app, 'acrotesseract-api-stack-test', {
     env: testEnv,
     stageName: 'test',
-    table: storage.table,
+    posesTable: storage.posesTable,
+    transitionsTable: storage.transitionsTable,
+    writesEnabled: false,
     lambdaCode: lambda.Code.fromAsset(stubAssetDir),
   });
   return Template.fromStack(stack);
@@ -31,7 +33,14 @@ test('runs the Scala handler on Java 21 arm64 with SnapStart', () => {
     Handler: 'acrotesseract.Handler::handleRequest',
     MemorySize: 1024,
     SnapStart: { ApplyOn: 'PublishedVersions' },
-    Environment: { Variables: Match.objectLike({ STAGE: 'test' }) },
+    Environment: {
+      Variables: Match.objectLike({
+        STAGE: 'test',
+        POSES_TABLE: { 'Fn::ImportValue': Match.stringLikeRegexp('PosesTable') },
+        TRANSITIONS_TABLE: { 'Fn::ImportValue': Match.stringLikeRegexp('TransitionsTable') },
+        WRITES_ENABLED: 'false',
+      }),
+    },
   });
 });
 
@@ -44,10 +53,13 @@ test('routes the HTTP API to the live alias', () => {
   });
 });
 
-test('grants data access to the table only, not table management', () => {
+test('grants data access to both tables only, not table management', () => {
   const policies = synth().findResources('AWS::IAM::Policy');
   const actions = JSON.stringify(policies);
   expect(actions).toContain('dynamodb:PutItem');
+  expect(actions).toContain('dynamodb:ConditionCheckItem');
+  expect(actions).toMatch(/PosesTable/);
+  expect(actions).toMatch(/TransitionsTable/);
   expect(actions).not.toContain('dynamodb:CreateTable');
   expect(actions).not.toContain('dynamodb:DeleteTable');
 });

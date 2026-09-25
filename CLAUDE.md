@@ -23,11 +23,12 @@ acrotesseract-frontend/   React 19 + Vite + Vitest. Nx targets: dev, build, test
   src/test/               renderApp() + stubApi() helpers and fixtures for page tests
 acrotesseract-backend/    sbt build, Scala 3.9. Nx targets wrap sbt: build (lambda/assembly), test, serve
   modules/domain/         Pose, Transition (no AWS deps)
-  modules/api/            Router, handlers, jsoniter-scala codecs; transport-neutral Request/Response.
-                          Serves poses/transitions from data/data.json (bundled as classpath data.json)
-                          via StaticData + InMemoryRepository until the DynamoDB store lands
+  modules/api/            Router (reads + POST/PUT writes), Validation, jsoniter-scala codecs, AcroRepository
+                          trait + InMemoryRepository, StaticData (loads data/data.json, bundled as classpath data.json)
+  modules/store/          DynamoDbRepository (two tables, optimistic locking, pose-existence transactions),
+                          DynamoDbTables (schema for DynamoDB Local; keep in sync with StorageStack), Wiring (env → router)
   modules/lambda/         acrotesseract.Handler (APIGatewayV2HTTPEvent) -> acrotesseract-lambda.jar
-  modules/local/          JDK HttpServer on :8080 wrapping the api module
+  modules/local/          JDK HttpServer on :8080 (`nx serve`) and the `seed` main (`nx seed`)
 acrotesseract-cdk/        CDK app: cdk/AcroTesseractCdkApp.ts, cdk/AcroTesseractStages.ts, cdk/stacks/*
 data/                     data.json (placeholder poses + transitions, RDS column names) + data.schema.json
 docs/                     design docs
@@ -51,6 +52,11 @@ docs/                     design docs
   and don't hard-code role names.
 - **Secrets**: SSM SecureStrings under `/acrotesseract/<stage>/`, created with `aws ssm put-parameter`.
   Google client IDs are public config, not secrets.
+- **Data**: two DynamoDB tables per stage, `acrotesseract-poses-<stage>` and `acrotesseract-transitions-<stage>`. The
+  schema lives in both `StorageStack.ts` and `DynamoDbTables.scala`; change them together. Every repository must pass
+  `RepositoryContract` (in-memory in `api` tests, DynamoDB Local in `store` tests with `DYNAMODB_ENDPOINT` set).
+- **Writes** are off on deployed stages (`writesEnabled` in `AcroTesseractStages.ts` → `WRITES_ENABLED`) until Google
+  sign-in exists. Don't turn them on in prod without auth.
 - **Backend**: keep the Lambda cold-start path lean: no web framework, no reflection-based JSON. Build SDK clients
   and the router during init so SnapStart snapshots them. The Lambda asset path in `AcroTesseractCdkApp.ts` and
   the `build` output in `acrotesseract-backend/project.json` both include the Scala version; update both together.

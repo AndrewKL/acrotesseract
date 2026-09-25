@@ -23,10 +23,10 @@ class StaticDataSuite extends munit.FunSuite:
         |"transitions":[{"transition_id":"$transitionId","name":"Loop","pose_from":"$poseA","pose_to":"$poseA","youtube_url":"https://youtu.be/x"}]}""".stripMargin
     val repo = StaticData.parse(json.getBytes(UTF_8))
     val a = UUID.fromString(poseA)
-    assertEquals(repo.getPose(a), Some(Pose(a, "Ground", None, Some("Start"))))
+    assertEquals(repo.getPose(a), Some(Pose(a, "Ground", None, Some("Start"), 1)))
     assertEquals(
       repo.getTransition(UUID.fromString(transitionId)),
-      Some(Transition(UUID.fromString(transitionId), "Loop", None, a, a, Some("https://youtu.be/x")))
+      Some(Transition(UUID.fromString(transitionId), "Loop", None, a, a, Some("https://youtu.be/x"), 1))
     )
 
   test("rejects duplicate ids, duplicate names and missing poses"):

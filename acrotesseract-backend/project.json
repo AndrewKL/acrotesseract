@@ -2,7 +2,10 @@
   "name": "acrotesseract-backend",
   "$schema": "../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
-  "tags": ["type:app", "lang:scala"],
+  "tags": [
+    "type:app",
+    "lang:scala"
+  ],
   "namedInputs": {
     "scala": [
       "{projectRoot}/build.sbt",
@@ -16,8 +19,12 @@
     "build": {
       "executor": "nx:run-commands",
       "cache": true,
-      "inputs": ["scala"],
-      "outputs": ["{projectRoot}/modules/lambda/target/scala-3.9.0/acrotesseract-lambda.jar"],
+      "inputs": [
+        "scala"
+      ],
+      "outputs": [
+        "{projectRoot}/modules/lambda/target/scala-3.9.0/acrotesseract-lambda.jar"
+      ],
       "options": {
         "cwd": "{projectRoot}",
         "command": "sbt lambda/assembly"
@@ -26,7 +33,9 @@
     "test": {
       "executor": "nx:run-commands",
       "cache": true,
-      "inputs": ["scala"],
+      "inputs": [
+        "scala"
+      ],
       "options": {
         "cwd": "{projectRoot}",
         "command": "sbt test"
@@ -38,6 +47,46 @@
       "options": {
         "cwd": "{projectRoot}",
         "command": "sbt local/run"
+      },
+      "configurations": {
+        "dynamodb": {
+          "env": {
+            "POSES_TABLE": "acrotesseract-poses-local",
+            "TRANSITIONS_TABLE": "acrotesseract-transitions-local",
+            "DYNAMODB_ENDPOINT": "http://localhost:8000",
+            "AWS_REGION": "us-west-2",
+            "AWS_ACCESS_KEY_ID": "local",
+            "AWS_SECRET_ACCESS_KEY": "local"
+          }
+        }
+      }
+    },
+    "seed": {
+      "executor": "nx:run-commands",
+      "defaultConfiguration": "prod",
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "sbt \"local/runMain acrotesseract.seed\""
+      },
+      "configurations": {
+        "prod": {
+          "env": {
+            "POSES_TABLE": "acrotesseract-poses-prod",
+            "TRANSITIONS_TABLE": "acrotesseract-transitions-prod",
+            "AWS_PROFILE": "acrotesseract-prod",
+            "AWS_REGION": "us-west-2"
+          }
+        },
+        "local": {
+          "env": {
+            "POSES_TABLE": "acrotesseract-poses-local",
+            "TRANSITIONS_TABLE": "acrotesseract-transitions-local",
+            "DYNAMODB_ENDPOINT": "http://localhost:8000",
+            "AWS_REGION": "us-west-2",
+            "AWS_ACCESS_KEY_ID": "local",
+            "AWS_SECRET_ACCESS_KEY": "local"
+          }
+        }
       }
     }
   }

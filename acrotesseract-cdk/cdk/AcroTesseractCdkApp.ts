@@ -28,7 +28,9 @@ for (const stage of acroTesseractStages) {
   const api = new ApiStack(app, `acrotesseract-api-stack-${stageName}`, {
     env,
     stageName,
-    table: storage.table,
+    posesTable: storage.posesTable,
+    transitionsTable: storage.transitionsTable,
+    writesEnabled: stage.writesEnabled,
     lambdaCode: lambda.Code.fromAsset(lambdaJar),
   });
 

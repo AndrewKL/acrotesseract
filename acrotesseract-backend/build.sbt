@@ -6,6 +6,13 @@ ThisBuild / scalacOptions ++= Seq("-deprecation", "-feature", "-Wunused:all", "-
 ThisBuild / javacOptions ++= Seq("--release", "21")
 
 val jsoniterVersion = "2.41.0"
+val awsSdkVersion = "2.55.4"
+
+// Only the URLConnection HTTP client is used; leaving out Netty and Apache keeps the Lambda JAR small.
+ThisBuild / excludeDependencies ++= Seq(
+  ExclusionRule("software.amazon.awssdk", "netty-nio-client"),
+  ExclusionRule("software.amazon.awssdk", "apache-client")
+)
 
 lazy val commonTest = Seq(
   libraryDependencies += "org.scalameta" %% "munit" % "1.3.6" % Test
@@ -33,9 +40,22 @@ lazy val api = (project in file("modules/api"))
     )
   )
 
+// DynamoDB repository (AWS SDK v2) and the env-based wiring shared by Lambda and the local server.
+lazy val store = (project in file("modules/store"))
+  .dependsOn(api % "compile->compile;test->test")
+  .settings(
+    commonTest,
+    libraryDependencies ++= Seq(
+      "software.amazon.awssdk" % "dynamodb" % awsSdkVersion,
+      "software.amazon.awssdk" % "url-connection-client" % awsSdkVersion
+    ),
+    // DynamoDB Local tests share tables, so run suites one at a time.
+    Test / parallelExecution := false
+  )
+
 // AWS Lambda entrypoint (API Gateway HTTP API, payload v2). Assembled into the JAR that CDK deploys.
 lazy val lambda = (project in file("modules/lambda"))
-  .dependsOn(api)
+  .dependsOn(store)
   .settings(
     commonTest,
     libraryDependencies ++= Seq(
@@ -54,14 +74,27 @@ lazy val lambda = (project in file("modules/lambda"))
     }
   )
 
-// Local HTTP server around the api module, for `nx serve acrotesseract-backend`.
+val passThroughEnv = Set(
+  "POSES_TABLE", "TRANSITIONS_TABLE", "DYNAMODB_ENDPOINT", "WRITES_ENABLED",
+  "AWS_REGION", "AWS_PROFILE", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"
+)
+
+// Developer tools: the local HTTP server (`nx serve`) and the DynamoDB seed (`nx seed`).
+// The SSO modules let the AWS SDK use `aws sso login` profiles; they stay out of the Lambda JAR.
 lazy val local = (project in file("modules/local"))
-  .dependsOn(api)
+  .dependsOn(store)
   .settings(
+    libraryDependencies ++= Seq(
+      "software.amazon.awssdk" % "sso" % awsSdkVersion,
+      "software.amazon.awssdk" % "ssooidc" % awsSdkVersion
+    ),
     Compile / run / fork := true,
-    Compile / run / envVars := Map("STAGE" -> "local")
+    // `sbt local/run` starts the server; the seed runs with `local/runMain acrotesseract.seed`.
+    Compile / run / mainClass := Some("acrotesseract.runLocalServer"),
+    // Pass through the table settings Nx sets (see project.json `serve -c dynamodb` and `seed`).
+    Compile / run / envVars := Map("STAGE" -> "local") ++ sys.env.filterKeys(passThroughEnv).toMap
   )
 
 lazy val root = (project in file("."))
-  .aggregate(domain, api, lambda, local)
+  .aggregate(domain, api, store, lambda, local)
   .settings(publish / skip := true)

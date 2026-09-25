@@ -1,31 +1,54 @@
 import * as cdk from 'aws-cdk-lib';
-import { Template } from 'aws-cdk-lib/assertions';
+import { Match, Template } from 'aws-cdk-lib/assertions';
 import { StorageStack } from './StorageStack';
 import { testEnv } from './testEnv';
 
-test('creates the retained single table with three GSIs', () => {
+function synth() {
   const app = new cdk.App();
-  const stack = new StorageStack(app, 'acrotesseract-storage-stack-test', {
-    env: testEnv,
-    stageName: 'test',
-  });
-  const template = Template.fromStack(stack);
+  const stack = new StorageStack(app, 'acrotesseract-storage-stack-test', { env: testEnv, stageName: 'test' });
+  return Template.fromStack(stack);
+}
 
-  template.hasResourceProperties('AWS::DynamoDB::Table', {
-    TableName: 'acrotesseract-test',
-    BillingMode: 'PAY_PER_REQUEST',
-    KeySchema: [
-      { AttributeName: 'PK', KeyType: 'HASH' },
-      { AttributeName: 'SK', KeyType: 'RANGE' },
-    ],
-    PointInTimeRecoverySpecification: { PointInTimeRecoveryEnabled: true },
-    DeletionProtectionEnabled: true,
-  });
-  template.hasResource('AWS::DynamoDB::Table', { DeletionPolicy: 'Retain' });
-
-  const table = Object.values(template.findResources('AWS::DynamoDB::Table'))[0];
-  const indexNames = table.Properties.GlobalSecondaryIndexes.map(
-    (gsi: { IndexName: string }) => gsi.IndexName,
+const indexNames = (template: Template, tableName: string) => {
+  const table = Object.values(template.findResources('AWS::DynamoDB::Table')).find(
+    (t) => t.Properties.TableName === tableName,
   );
-  expect(indexNames).toEqual(['GSI1', 'GSI2', 'GSI3']);
+  return table?.Properties.GlobalSecondaryIndexes.map((gsi: { IndexName: string }) => gsi.IndexName);
+};
+
+test('creates retained, protected poses and transitions tables', () => {
+  const template = synth();
+  template.resourceCountIs('AWS::DynamoDB::Table', 2);
+  for (const [name, key] of [
+    ['acrotesseract-poses-test', 'poseId'],
+    ['acrotesseract-transitions-test', 'transitionId'],
+  ]) {
+    template.hasResourceProperties('AWS::DynamoDB::Table', {
+      TableName: name,
+      BillingMode: 'PAY_PER_REQUEST',
+      KeySchema: [{ AttributeName: key, KeyType: 'HASH' }],
+      PointInTimeRecoverySpecification: { PointInTimeRecoveryEnabled: true },
+      DeletionProtectionEnabled: true,
+    });
+  }
+  template.allResources('AWS::DynamoDB::Table', { DeletionPolicy: 'Retain', UpdateReplacePolicy: 'Retain' });
+});
+
+test('indexes match what the Scala repository queries', () => {
+  const template = synth();
+  expect(indexNames(template, 'acrotesseract-poses-test')).toEqual(['byName']);
+  expect(indexNames(template, 'acrotesseract-transitions-test')).toEqual(['byName', 'byPoseFrom', 'byPoseTo']);
+  template.hasResourceProperties('AWS::DynamoDB::Table', {
+    TableName: 'acrotesseract-transitions-test',
+    GlobalSecondaryIndexes: Match.arrayWith([
+      Match.objectLike({
+        IndexName: 'byPoseFrom',
+        KeySchema: [
+          { AttributeName: 'poseFrom', KeyType: 'HASH' },
+          { AttributeName: 'nameLower', KeyType: 'RANGE' },
+        ],
+        Projection: { ProjectionType: 'ALL' },
+      }),
+    ]),
+  });
 });
